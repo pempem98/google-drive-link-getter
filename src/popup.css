@@ -1,0 +1,128 @@
+.popup-container {
+  padding: 10px;
+  width: 500px;
+}
+
+h1 {
+  font-size: 24px;
+  text-align: center;
+  margin-bottom: 10px;
+  font-weight: 900;
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.get-links-button {
+  padding: 8px 16px;
+  background-color: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.get-links-button:hover {
+  background-color: #1351c6;
+}
+
+.get-links-button.completed {
+  background-color: #28a745;
+}
+
+.get-links-button.completed:hover {
+  background-color: #218838;
+}
+
+.get-links-button.failed {
+  background-color: #dc3545;
+}
+
+.get-links-button.failed:hover {
+  background-color: #c82333;
+}
+
+.get-links-button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.copy-button, .export-button, .history-button, .clear-history-button {
+  padding: 8px 16px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.copy-button:hover, .export-button:hover, .history-button:hover, .clear-history-button:hover {
+  background-color: #5a6268;
+}
+
+.copy-button:disabled, .export-button:disabled, .history-button:disabled, .clear-history-button:disabled {
+  background-color: #adb5bd;
+  cursor: not-allowed;
+}
+
+.status-message {
+  display: block;
+  text-align: center;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.status-message:contains('Copied'), .status-message:contains('Exported'), .status-message:contains('cleared') {
+  color: #28a745;
+}
+
+.status-message:contains('failed') {
+  color: #dc3545;
+}
+
+.history-container {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ced4da;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.history-entry {
+  margin-bottom: 10px;
+}
+
+.history-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: #1a73e8;
+}
+
+.history-entry strong {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.history-entry pre {
+  white-space: pre-wrap;
+  font-size: 12px;
+  background-color: #f8f9fa;
+  padding: 5px;
+  border-radius: 4px;
+}
+
+.output-textarea {
+  width: 100%;
+  resize: none;
+  padding: 8px;
+  font-family: monospace;
+  border-width: thin;
+  border-radius: 4px;
+}
+
