@@ -1,4 +1,4 @@
-# Google Drive File Link Extractor
+# Google Drive Links Extractor
 
 A Manifest V3 Chrome extension built with TypeScript, React, and Vite that extracts file names and share links from Google Drive pages on-demand. The extension provides a user-friendly popup interface to display links, with visual feedback for success or failure and a copy-to-clipboard feature for easy sharing.
 
@@ -20,8 +20,8 @@ A Manifest V3 Chrome extension built with TypeScript, React, and Vite that extra
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/your-username/ggdrive-link-extractor.git
-   cd ggdrive-link-extractor
+   git clone https://github.com/pempem98/google-drive-links-extractor.git
+   cd google-drive-links-extractor
    ```
 
 2. **Install Dependencies**:
@@ -64,7 +64,7 @@ ggdrive-link-extractor/
 ├── vite.config.ts      # Vite build configuration
 ├── package.json        # Dependencies and scripts
 ├── tsconfig.json       # TypeScript configuration
-├── .eslintrc.json      # ESLint configuration
+├── eslintrc.json       # ESLint configuration
 ├── README.md           # Project documentation
 ```
 
