@@ -15,9 +15,13 @@ export default defineConfig({
         {
           src: 'src/popup.html',
           dest: ''
+        },
+        {
+          src: 'asset/*',
+          dest: ''
         }
       ]
-    })
+    }),
   ],
   css: {
     modules: {
