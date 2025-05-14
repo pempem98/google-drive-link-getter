@@ -62,7 +62,7 @@ const Popup: React.FC = () => {
                 const fileElements = document.querySelectorAll('div.WYuW0e[data-id]');
                 for (const el of fileElements) {
                   const id = el.getAttribute('data-id');
-                  const nameElement = el.querySelector('div.KL4NAf');
+                  const nameElement = el.querySelector('div.KL4NAf') || el.querySelector('div.Q5txwe');
                   const name = nameElement?.textContent?.trim() || 'Unknown';
                   if (id) {
                     files.push({ name, shareLink: `https://drive.google.com/file/d/${id}/view?usp=sharing` });
