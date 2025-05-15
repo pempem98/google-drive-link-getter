@@ -10,6 +10,52 @@ h1 {
   font-weight: 900;
 }
 
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.tab-button {
+  padding: 6px 12px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.tab-button:hover {
+  background-color: #5a6268;
+}
+
+.tab-button.active {
+  background-color: #1a73e8;
+}
+
+.tab-button.active:hover {
+  background-color: #1351c6;
+}
+
+.links-container {
+  margin-bottom: 10px;
+}
+
+.total-files {
+  text-align: center;
+  font-size: 14px;
+  color: #1a73e8;
+  margin-bottom: 10px;
+}
+
+.links-box {
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
 .button-container {
   display: flex;
   justify-content: center;
@@ -65,6 +111,22 @@ h1 {
   background-color: #5a6268;
 }
 
+.copy-button.completed, .export-button.completed {
+  background-color: #28a745;
+}
+
+.copy-button.completed:hover, .export-button.completed:hover {
+  background-color: #218838;
+}
+
+.copy-button.failed, .export-button.failed {
+  background-color: #dc3545;
+}
+
+.copy-button.failed:hover, .export-button.failed:hover {
+  background-color: #c82333;
+}
+
 .copy-button:disabled, .export-button:disabled, .history-button:disabled, .clear-history-button:disabled {
   background-color: #adb5bd;
   cursor: not-allowed;
@@ -109,6 +171,12 @@ h1 {
   margin-bottom: 5px;
 }
 
+.history-actions {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
 .history-entry pre {
   white-space: pre-wrap;
   font-size: 12px;
@@ -122,7 +190,33 @@ h1 {
   resize: none;
   padding: 8px;
   font-family: monospace;
-  border-width: thin;
+  border: none;
+  border-radius: 4px;
+  background-color: #e9ecef;
+}
+
+.settings-container {
+  padding: 10px;
+  border: 1px solid #ced4da;
   border-radius: 4px;
 }
 
+.settings-container h2 {
+  font-size: 18px;
+  margin-bottom: 10px;
+}
+
+.setting-item {
+  margin-bottom: 10px;
+}
+
+.setting-item label {
+  margin-right: 10px;
+}
+
+.setting-item select,
+.setting-item input[type="checkbox"] {
+  padding: 5px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+}
