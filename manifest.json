@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Google Drive Links Extractor",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Extracts file names and share links from Google Drive folders",
   "permissions": [
     "activeTab",
