@@ -1,6 +1,6 @@
 {
   "name": "google-drive-links-extractor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Chrome extension to extract file names and share links from Google Drive",
   "main": "index.js",
   "scripts": {
