@@ -1,6 +1,88 @@
 .popup-container {
   padding: 10px;
   width: 500px;
+  background-color: #fff;
+  color: #000;
+}
+
+.popup-container.dark-mode {
+  background-color: #1a1a1a;
+  color: #fff;
+}
+
+.popup-container.dark-mode .tabs,
+.popup-container.dark-mode .links-box,
+.popup-container.dark-mode .history-container,
+.popup-container.dark-mode .settings-container {
+  border-color: #444;
+}
+
+.popup-container.dark-mode .tab-button,
+.popup-container.dark-mode .get-links-button,
+.popup-container.dark-mode .copy-button,
+.popup-container.dark-mode .export-button,
+.popup-container.dark-mode .clear-history-button {
+  background-color: #333;
+  color: #fff;
+}
+
+.popup-container.dark-mode .tab-button:hover,
+.popup-container.dark-mode .get-links-button:hover,
+.popup-container.dark-mode .copy-button:hover,
+.popup-container.dark-mode .export-button:hover,
+.popup-container.dark-mode .clear-history-button:hover {
+  background-color: #444;
+}
+
+.popup-container.dark-mode .tab-button.active {
+  background-color: #1a73e8;
+}
+
+.popup-container.dark-mode .get-links-button.completed,
+.popup-container.dark-mode .copy-button.completed,
+.popup-container.dark-mode .export-button.completed {
+  background-color: #28a745;
+}
+
+.popup-container.dark-mode .get-links-button.completed:hover,
+.popup-container.dark-mode .copy-button.completed:hover,
+.popup-container.dark-mode .export-button.completed:hover {
+  background-color: #218838;
+}
+
+.popup-container.dark-mode .get-links-button.failed,
+.popup-container.dark-mode .copy-button.failed,
+.popup-container.dark-mode .export-button.failed {
+  background-color: #dc3545;
+}
+
+.popup-container.dark-mode .get-links-button.failed:hover,
+.popup-container.dark-mode .copy-button.failed:hover,
+.popup-container.dark-mode .export-button.failed:hover {
+  background-color: #c82333;
+}
+
+.popup-container.dark-mode .output-textarea,
+.popup-container.dark-mode .history-entry pre {
+  background-color: #2a2a2a;
+  color: #fff;
+}
+
+.popup-container.dark-mode .search-input {
+  background-color: #2a2a2a;
+  color: #fff;
+  border-color: #444;
+}
+
+.popup-container.dark-mode select {
+  background-color: #2a2a2a;
+  color: #fff;
+  border-color: #444;
+}
+
+.popup-container.dark-mode select option {
+  background-color: #2a2a2a;
+  color: #fff;
 }
 
 h1 {
@@ -150,8 +232,17 @@ h1 {
 .history-container {
   max-height: 300px;
   overflow-y: auto;
+  overflow-x: hidden;
   border: 1px solid #ced4da;
   padding: 10px;
+  border-radius: 4px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ced4da;
   border-radius: 4px;
 }
 
@@ -180,9 +271,12 @@ h1 {
 .history-entry pre {
   white-space: pre-wrap;
   font-size: 12px;
-  background-color: #f8f9fa;
+  background-color: #e9ecef;
   padding: 5px;
   border-radius: 4px;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-wrap: break-word;
 }
 
 .output-textarea {

@@ -1,4 +1,4 @@
-# Google Drive Links Extractor
+# Google Drive Link Getter
 
 A Manifest V3 Chrome extension built with TypeScript, React, and Vite that extracts file names and share links from Google Drive pages on-demand. The extension provides a user-friendly popup interface with tabbed navigation, visual feedback for actions, and customizable settings for a seamless user experience.
 
@@ -23,6 +23,7 @@ A Manifest V3 Chrome extension built with TypeScript, React, and Vite that extra
   - Tabbed navigation (Home, History, Settings).
   - A boxed layout for buttons in the Home tab.
   - A borderless textarea with a dark background, styled consistently with the History tab.
+  - No horizontal scrollbar in the History tab, with content wrapping for long links.
 
 ## Screenshots
 
@@ -33,8 +34,8 @@ A Manifest V3 Chrome extension built with TypeScript, React, and Vite that extra
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/pempem98/google-drive-links-extractor.git
-   cd google-drive-links-extractor
+   git clone https://github.com/pempem98/google-drive-link-getter.git
+   cd google-drive-link-getter
    ```
 
 2. **Install Dependencies**:
@@ -80,7 +81,7 @@ A Manifest V3 Chrome extension built with TypeScript, React, and Vite that extra
 
 ### Project Structure
 ```
-google-drive-links-extractor/
+google-drive-link-getter/
 ├── manifest.json       # Extension configuration
 ├── src/
 │   ├── popup.tsx       # Popup UI and link extraction logic

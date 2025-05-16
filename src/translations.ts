@@ -1,6 +1,6 @@
 export const translations = {
   vi: {
-    title: 'Google Drive Links Extractor',
+    title: 'Google Drive Link Getter',
     homeTab: 'Trang chủ',
     historyTab: 'Lịch sử',
     settingsTab: 'Cài đặt',
@@ -27,9 +27,12 @@ export const translations = {
     languageLabel: 'Ngôn ngữ:',
     separatorLabel: 'Ký tự ngăn cách:',
     extensionLabel: 'Loại bỏ đuôi tệp (ví dụ: .pdf, .docx)',
+    notificationsLabel: 'Bật thông báo đẩy',
+    darkModeLabel: 'Chế độ tối',
+    searchHistoryPlaceholder: 'Tìm kiếm theo tiêu đề hoặc ngày...'
   },
   en: {
-    title: 'Google Drive Links Extractor',
+    title: 'Google Drive Link Getter',
     homeTab: 'Home',
     historyTab: 'History',
     settingsTab: 'Settings',
@@ -56,5 +59,8 @@ export const translations = {
     languageLabel: 'Language:',
     separatorLabel: 'Separator character:',
     extensionLabel: 'Remove file extension (e.g., .pdf, .docx)',
+    notificationsLabel: 'Enable push notifications',
+    darkModeLabel: 'Dark mode',
+    searchHistoryPlaceholder: 'Search by title or date...'
   },
 };

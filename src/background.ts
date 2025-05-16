@@ -1,4 +1,12 @@
-// Background script for MV3 Chrome extension
-// No background logic required for this extension
-export {};
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'SHOW_NOTIFICATION') {
+    chrome.notifications.create({
+      type: 'basic',
+      iconUrl: '128x128.png',
+      title: message.title,
+      message: message.message
+    });
+  }
+});

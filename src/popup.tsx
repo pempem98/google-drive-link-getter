@@ -29,12 +29,24 @@ const Popup: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [currentTabTitle, setCurrentTabTitle] = useState('');
-  const [separator, setSeparator] = useState<string>('\t'); // Mặc định: Tab
+  const [separator, setSeparator] = useState<string>('\t'); // Default: Tab
   const [removeExtension, setRemoveExtension] = useState<boolean>(false);
-  const [language, setLanguage] = useState<string>('vi'); // Mặc định: Tiếng Việt
+  const [language, setLanguage] = useState<string>('vi'); // Default: Vietnamese
   const [totalFiles, setTotalFiles] = useState<number>(0);
+  const [darkMode, setDarkMode] = useState<boolean>(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(true);
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   const t = translations[language as keyof typeof translations] || translations.vi;
+
+  // Format date to dd/mm/yyyy
+  const formatDate = (timestamp: number): string => {
+    const date = new Date(timestamp);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
 
   useEffect(() => {
     // Load history and settings
@@ -46,6 +58,8 @@ const Popup: React.FC = () => {
         setSeparator(result.settings.separator || '\t');
         setRemoveExtension(result.settings.removeExtension || false);
         setLanguage(result.settings.language || 'vi');
+        setDarkMode(result.settings.darkMode || false);
+        setNotificationsEnabled(result.settings.notificationsEnabled !== false);
       }
     });
   }, []);
@@ -70,14 +84,12 @@ const Popup: React.FC = () => {
       setCurrentTabTitle(tabTitle);
 
       const results = await chrome.scripting.executeScript({
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         target: { tabId: tab.id! },
         func: (removeExtension: boolean) => {
           return new Promise((resolve) => {
-            let lastHeight = 0;
-            const scroll = setInterval(() => {
-              window.scrollTo(0, document.body.scrollHeight);
-              if (document.body.scrollHeight === lastHeight) {
-                clearInterval(scroll);
+            const observer = new IntersectionObserver((entries) => {
+              if (entries[0].isIntersecting) {
                 const files: { name: string; shareLink: string }[] = [];
                 const fileElements = document.querySelectorAll('div.WYuW0e[data-id]');
                 for (const el of fileElements) {
@@ -91,10 +103,22 @@ const Popup: React.FC = () => {
                     files.push({ name, shareLink: `https://drive.google.com/file/d/${id}/view?usp=sharing` });
                   }
                 }
+                observer.disconnect();
                 resolve({ files, total: fileElements.length });
               }
-              lastHeight = document.body.scrollHeight;
-            }, 500);
+            }, { threshold: 0.1 });
+
+            const checkElements = () => {
+              const fileElements = document.querySelectorAll('div.WYuW0e[data-id]');
+              if (fileElements.length > 0) {
+                observer.observe(fileElements[fileElements.length - 1]);
+                window.scrollTo(0, document.body.scrollHeight);
+              } else {
+                setTimeout(checkElements, 500);
+              }
+            };
+
+            checkElements();
           });
         },
         args: [removeExtension],
@@ -133,6 +157,15 @@ const Popup: React.FC = () => {
           setHistory(history);
         });
       });
+
+      // Trigger notification if enabled
+      if (notificationsEnabled) {
+        chrome.runtime.sendMessage({
+          type: 'SHOW_NOTIFICATION',
+          title: t.completed,
+          message: `${t.totalFiles}${totalFiles}`
+        });
+      }
 
       setTimeout(() => setButtonState('idle'), 3000);
     } catch (error) {
@@ -203,8 +236,13 @@ const Popup: React.FC = () => {
     });
   };
 
+  const filteredHistory = history.filter(entry =>
+    entry.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    formatDate(entry.timestamp).toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div className="popup-container">
+    <div className={`popup-container ${darkMode ? 'dark-mode' : ''}`}>
       <h1>{t.title}</h1>
       <div className="tabs">
         <button
@@ -236,24 +274,35 @@ const Popup: React.FC = () => {
             setRemoveExtension={setRemoveExtension}
             language={language}
             setLanguage={setLanguage}
+            darkMode={darkMode}
+            setDarkMode={setDarkMode}
+            notificationsEnabled={notificationsEnabled}
+            setNotificationsEnabled={setNotificationsEnabled}
           />
         </Suspense>
       ) : showHistory ? (
         <div className="history-container">
+          <input
+            type="text"
+            className="search-input"
+            placeholder={t.searchHistoryPlaceholder}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
           <button
             className="clear-history-button"
             onClick={handleClearHistory}
-            disabled={history.length === 0}
+            disabled={filteredHistory.length === 0}
           >
             {t.clearHistory}
           </button>
-          {history.length === 0 ? (
+          {filteredHistory.length === 0 ? (
             <p>{t.noHistory}</p>
           ) : (
-            history.map((entry, index) => (
+            filteredHistory.map((entry, index) => (
               <div key={index} className="history-entry">
                 <h3 className="history-title">{entry.title}</h3>
-                <strong>{new Date(entry.timestamp).toLocaleString()}</strong>
+                <strong>{formatDate(entry.timestamp)}</strong>
                 <div className="history-actions">
                   <button
                     className={`copy-button ${copyState[`history-${index}`] === 'completed' ? 'completed' : copyState[`history-${index}`] === 'failed' ? 'failed' : ''}`}
