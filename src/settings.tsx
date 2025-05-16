@@ -8,6 +8,10 @@ interface SettingsProps {
   setRemoveExtension: (value: boolean) => void;
   language: string;
   setLanguage: (value: string) => void;
+  darkMode: boolean;
+  setDarkMode: (value: boolean) => void;
+  notificationsEnabled: boolean;
+  setNotificationsEnabled: (value: boolean) => void;
 }
 
 const Settings: React.FC<SettingsProps> = ({
@@ -17,25 +21,81 @@ const Settings: React.FC<SettingsProps> = ({
   setRemoveExtension,
   language,
   setLanguage,
+  darkMode,
+  setDarkMode,
+  notificationsEnabled,
+  setNotificationsEnabled,
 }) => {
   const t = translations[language as keyof typeof translations] || translations.vi;
 
   const handleSeparatorChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newSeparator = e.target.value === 'tab' ? '\t' : e.target.value;
     setSeparator(newSeparator);
-    chrome.storage.local.set({ settings: { separator: newSeparator, removeExtension, language } });
+    chrome.storage.local.set({ 
+      settings: { 
+        separator: newSeparator, 
+        removeExtension, 
+        language, 
+        darkMode, 
+        notificationsEnabled 
+      } 
+    });
   };
 
   const handleExtensionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.checked;
     setRemoveExtension(newValue);
-    chrome.storage.local.set({ settings: { separator, removeExtension: newValue, language } });
+    chrome.storage.local.set({ 
+      settings: { 
+        separator, 
+        removeExtension: newValue, 
+        language, 
+        darkMode, 
+        notificationsEnabled 
+      } 
+    });
   };
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newLanguage = e.target.value;
     setLanguage(newLanguage);
-    chrome.storage.local.set({ settings: { separator, removeExtension, language: newLanguage } });
+    chrome.storage.local.set({ 
+      settings: { 
+        separator, 
+        removeExtension, 
+        language: newLanguage, 
+        darkMode, 
+        notificationsEnabled 
+      } 
+    });
+  };
+
+  const handleDarkModeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.checked;
+    setDarkMode(newValue);
+    chrome.storage.local.set({ 
+      settings: { 
+        separator, 
+        removeExtension, 
+        language, 
+        darkMode: newValue, 
+        notificationsEnabled 
+      } 
+    });
+  };
+
+  const handleNotificationsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.checked;
+    setNotificationsEnabled(newValue);
+    chrome.storage.local.set({ 
+      settings: { 
+        separator, 
+        removeExtension, 
+        language, 
+        darkMode, 
+        notificationsEnabled: newValue 
+      } 
+    });
   };
 
   return (
@@ -67,6 +127,26 @@ const Settings: React.FC<SettingsProps> = ({
             onChange={handleExtensionChange}
           />
           {t.extensionLabel}
+        </label>
+      </div>
+      <div className="setting-item">
+        <label>
+          <input
+            type="checkbox"
+            checked={darkMode}
+            onChange={handleDarkModeChange}
+          />
+          {t.darkModeLabel}
+        </label>
+      </div>
+      <div className="setting-item">
+        <label>
+          <input
+            type="checkbox"
+            checked={notificationsEnabled}
+            onChange={handleNotificationsChange}
+          />
+          {t.notificationsLabel}
         </label>
       </div>
     </div>
