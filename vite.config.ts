@@ -19,6 +19,10 @@ export default defineConfig({
         {
           src: 'asset/*',
           dest: ''
+        },
+        {
+          src: '_locales/*',
+          dest: '_locales'
         }
       ]
     }),

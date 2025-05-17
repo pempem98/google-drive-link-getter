@@ -6,6 +6,7 @@
   "scripts": {
     "build": "vite build",
     "lint": "eslint src --ext .ts,.tsx --config eslintrc.json",
+    "lint:fix": "eslint src --ext .ts,.tsx --config eslintrc.json --fix",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
