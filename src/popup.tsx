@@ -96,33 +96,51 @@ const Popup: React.FC = () => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         target: { tabId: tab.id! },
         func: (removeExtension: boolean) => {
-          return new Promise((resolve) => {
-            const observer = new IntersectionObserver((entries) => {
-              if (entries[0].isIntersecting) {
-                const files: { name: string; shareLink: string; id: string }[] = [];
-                const fileElements = document.querySelectorAll('div.WYuW0e[data-id]');
-                for (const el of fileElements) {
-                  const id = el.getAttribute('data-id');
-                  const nameElement = el.querySelector('div.KL4NAf') || el.querySelector('div.Q5txwe');
-                  let name = nameElement?.textContent?.trim() || 'Unknown';
-                  if (removeExtension && name !== 'Unknown') {
-                    name = name.replace(/\.[^/.]+$/, '');
-                  }
-                  if (id) {
-                    files.push({ name, shareLink: `https://drive.google.com/file/d/${id}/view?usp=sharing`, id });
-                  }
-                }
-                observer.disconnect();
-                resolve({ files, total: fileElements.length });
-              }
-            }, { threshold: 0.1 });
+          // Helper function to create a delay using Promise
+          const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-            const checkElements = () => {
+          return new Promise((resolve) => {
+            let attempts = 0;
+            const maxAttempts = 50; // Limit to 50 attempts
+
+            const checkElements = async () => {
               const fileElements = document.querySelectorAll('div.WYuW0e[data-id]');
+              const bodyFrame = document.querySelector('div > c-wiz.PEfnhb');
               if (fileElements.length > 0) {
-                observer.observe(fileElements[fileElements.length - 1]);
-                window.scrollTo(0, document.body.scrollHeight);
+                if (bodyFrame) {
+                  bodyFrame.scrollTo(0, bodyFrame.scrollHeight);
+                } else {
+                  window.scrollTo(0, document.body.scrollHeight);
+                }
+                // Add a synchronous delay using await
+                await sleep(2000); // 2000ms delay before checking updated file elements
+                const updatedFileElements = document.querySelectorAll('div.WYuW0e[data-id]');
+                if (updatedFileElements.length > fileElements.length) {
+                  checkElements();
+                } else {
+                  // Resolve with the final list of files
+                  const files: { name: string; shareLink: string; id: string }[] = [];
+                  const finalFileElements = document.querySelectorAll('div.WYuW0e[data-id]');
+                  for (const el of finalFileElements) {
+                    const id = el.getAttribute('data-id');
+                    const nameElement = el.querySelector('div.KL4NAf') || el.querySelector('div.Q5txwe');
+                    let name = nameElement?.textContent?.trim() || 'Unknown';
+                    if (removeExtension && name !== 'Unknown') {
+                      name = name.replace(/\.[^/.]+$/, '');
+                    }
+                    if (id) {
+                      files.push({ name, shareLink: `https://drive.google.com/file/d/${id}/view?usp=sharing`, id });
+                    }
+                  }
+                  resolve({ files, total: finalFileElements.length });
+                }
+                attempts = 0; // Reset attempts if files are found
               } else {
+                attempts++;
+                if (attempts >= maxAttempts) {
+                  resolve({ files: [], total: 0 }); // Resolve with empty result if max attempts reached
+                  return;
+                }
                 setTimeout(checkElements, 500);
               }
             };
@@ -320,6 +338,8 @@ const Popup: React.FC = () => {
           <Settings
             separator={separator}
             setSeparator={setSeparator}
+            customSeparator={customSeparator}
+            setCustomSeparator={setCustomSeparator}
             removeExtension={removeExtension}
             setRemoveExtension={setRemoveExtension}
             darkMode={darkMode}
