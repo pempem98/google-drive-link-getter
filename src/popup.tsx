@@ -1,7 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
-import { translations } from './translations';
 import './popup.css';
+import { loadMessages, getMessage } from './utils';
 
 // Lazy load settings component
 const Settings = lazy(() => import('./settings'));
@@ -9,6 +9,7 @@ const Settings = lazy(() => import('./settings'));
 interface DriveFile {
   name: string;
   shareLink: string;
+  id: string;
 }
 
 interface HistoryEntry {
@@ -30,36 +31,44 @@ const Popup: React.FC = () => {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [currentTabTitle, setCurrentTabTitle] = useState('');
   const [separator, setSeparator] = useState<string>('\t'); // Default: Tab
+  const [customSeparator, setCustomSeparator] = useState<string>('');
   const [removeExtension, setRemoveExtension] = useState<boolean>(false);
-  const [language, setLanguage] = useState<string>('vi'); // Default: Vietnamese
   const [totalFiles, setTotalFiles] = useState<number>(0);
   const [darkMode, setDarkMode] = useState<boolean>(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(true);
+  const [autoShareEnabled, setAutoShareEnabled] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [userLanguage, setUserLanguage] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [messages, setMessages] = useState<any>({});
+  const [isLoading, setIsLoading] = useState(true);
 
-  const t = translations[language as keyof typeof translations] || translations.vi;
-
-  // Format date to dd/mm/yyyy
-  const formatDate = (timestamp: number): string => {
-    const date = new Date(timestamp);
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
-  };
-
+  // Load messages based on userLanguage or browser locale
   useEffect(() => {
-    // Load history and settings
+    const load = async () => {
+      setIsLoading(true);
+      const locale = userLanguage || chrome.i18n.getUILanguage().split('-')[0];
+      const loadedMessages = await loadMessages(locale);
+      setMessages(loadedMessages);
+      setIsLoading(false);
+    };
+    load();
+  }, [userLanguage]);
+
+  // Load history and settings
+  useEffect(() => {
     chrome.storage.local.get(['history', 'settings'], (result) => {
       if (result.history) {
         setHistory(result.history);
       }
       if (result.settings) {
         setSeparator(result.settings.separator || '\t');
+        setCustomSeparator(result.settings.customSeparator || '');
         setRemoveExtension(result.settings.removeExtension || false);
-        setLanguage(result.settings.language || 'vi');
         setDarkMode(result.settings.darkMode || false);
         setNotificationsEnabled(result.settings.notificationsEnabled !== false);
+        setAutoShareEnabled(result.settings.autoShareEnabled || false);
+        setUserLanguage(result.settings.userLanguage || null);
       }
     });
   }, []);
@@ -73,7 +82,7 @@ const Popup: React.FC = () => {
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       if (!tab.url?.startsWith('https://drive.google.com/')) {
-        setOutput(t.invalidPage);
+        setOutput(getMessage(messages, 'invalidPage'));
         setButtonState('failed');
         setTimeout(() => setButtonState('idle'), 3000);
         setIsScraping(false);
@@ -90,7 +99,7 @@ const Popup: React.FC = () => {
           return new Promise((resolve) => {
             const observer = new IntersectionObserver((entries) => {
               if (entries[0].isIntersecting) {
-                const files: { name: string; shareLink: string }[] = [];
+                const files: { name: string; shareLink: string; id: string }[] = [];
                 const fileElements = document.querySelectorAll('div.WYuW0e[data-id]');
                 for (const el of fileElements) {
                   const id = el.getAttribute('data-id');
@@ -100,7 +109,7 @@ const Popup: React.FC = () => {
                     name = name.replace(/\.[^/.]+$/, '');
                   }
                   if (id) {
-                    files.push({ name, shareLink: `https://drive.google.com/file/d/${id}/view?usp=sharing` });
+                    files.push({ name, shareLink: `https://drive.google.com/file/d/${id}/view?usp=sharing`, id });
                   }
                 }
                 observer.disconnect();
@@ -129,7 +138,7 @@ const Popup: React.FC = () => {
       const totalFiles = result?.total || 0;
 
       if (files.length === 0) {
-        setOutput(t.noFiles);
+        setOutput(getMessage(messages, 'noFiles'));
         setButtonState('failed');
         setTimeout(() => setButtonState('idle'), 3000);
         setIsScraping(false);
@@ -138,8 +147,37 @@ const Popup: React.FC = () => {
 
       setTotalFiles(totalFiles);
 
-      const outputText = files
-        .map((file: DriveFile) => `${file.name}${separator}${file.shareLink}`)
+      const updatedFiles = files;
+      // Temporarily disabled auto-share logic
+      /*
+      if (autoShareEnabled) {
+        const token = await new Promise<string>((resolve, reject) => {
+          chrome.identity.getAuthToken({ interactive: true }, (token) => {
+            if (chrome.runtime.lastError || !token) {
+              reject(new Error('Failed to get OAuth token'));
+            } else {
+              resolve(token);
+            }
+          });
+        });
+
+        updatedFiles = await Promise.all(
+          files.map(async (file) => {
+            try {
+              const shareLink = await ensureFileIsShared(file.id, token);
+              return { ...file, shareLink };
+            } catch (error) {
+              console.error(`Failed to share file ${file.id}:`, error);
+              return file;
+            }
+          })
+        );
+      }
+      */
+
+      const activeSeparator = separator === 'other' ? customSeparator : separator;
+      const outputText = updatedFiles
+        .map((file: DriveFile) => `${file.name}${activeSeparator}${file.shareLink}`)
         .join('\n');
       setOutput(outputText);
       setButtonState('completed');
@@ -150,7 +188,7 @@ const Popup: React.FC = () => {
           timestamp: Date.now(),
           title: tabTitle,
           links: outputText,
-          separator,
+          separator: activeSeparator,
         });
         if (history.length > 50) history.shift();
         chrome.storage.local.set({ history }, () => {
@@ -158,12 +196,11 @@ const Popup: React.FC = () => {
         });
       });
 
-      // Trigger notification if enabled
       if (notificationsEnabled) {
         chrome.runtime.sendMessage({
           type: 'SHOW_NOTIFICATION',
-          title: t.completed,
-          message: `${t.totalFiles}${totalFiles}`
+          title: getMessage(messages, 'completed'),
+          message: `${getMessage(messages, 'totalFiles')}${totalFiles}`
         });
       }
 
@@ -181,14 +218,14 @@ const Popup: React.FC = () => {
     try {
       await navigator.clipboard.writeText(text);
       setCopyState((prev) => ({ ...prev, [key]: 'completed' }));
-      setStatusMessage(t.copied);
+      setStatusMessage(getMessage(messages, 'copyCompleted') + '!');
       setTimeout(() => {
         setCopyState((prev) => ({ ...prev, [key]: 'idle' }));
         setStatusMessage('');
       }, 2000);
     } catch (error) {
       setCopyState((prev) => ({ ...prev, [key]: 'failed' }));
-      setStatusMessage(t.copyFailed);
+      setStatusMessage(getMessage(messages, 'copyFailed') + '!');
       setTimeout(() => {
         setCopyState((prev) => ({ ...prev, [key]: 'idle' }));
         setStatusMessage('');
@@ -199,8 +236,9 @@ const Popup: React.FC = () => {
   const handleExportCSV = async (links: string, separator: string, key: string) => {
     setExportState((prev) => ({ ...prev, [key]: 'processing' }));
     try {
+      const activeSeparator = separator === 'other' ? customSeparator : separator;
       const rows = links.split('\n').map(line => {
-        const [name, link] = line.split(separator === '\t' ? '\t' : separator);
+        const [name, link] = line.split(activeSeparator === '\t' ? '\t' : activeSeparator);
         return `"${name.replace(/"/g, '""')}","${link}"`;
       });
       const csvContent = ['Name,ShareLink', ...rows].join('\n');
@@ -213,14 +251,14 @@ const Popup: React.FC = () => {
       a.click();
       URL.revokeObjectURL(url);
       setExportState((prev) => ({ ...prev, [key]: 'completed' }));
-      setStatusMessage(t.exported);
+      setStatusMessage(getMessage(messages, 'exportCompleted') + '!');
       setTimeout(() => {
         setExportState((prev) => ({ ...prev, [key]: 'idle' }));
         setStatusMessage('');
       }, 2000);
     } catch (error) {
       setExportState((prev) => ({ ...prev, [key]: 'failed' }));
-      setStatusMessage(t.exportFailed);
+      setStatusMessage(getMessage(messages, 'exportFailed') + '!');
       setTimeout(() => {
         setExportState((prev) => ({ ...prev, [key]: 'idle' }));
         setStatusMessage('');
@@ -231,9 +269,17 @@ const Popup: React.FC = () => {
   const handleClearHistory = () => {
     chrome.storage.local.remove('history', () => {
       setHistory([]);
-      setStatusMessage(t.cleared);
+      setStatusMessage(getMessage(messages, 'cleared'));
       setTimeout(() => setStatusMessage(''), 2000);
     });
+  };
+
+  const formatDate = (timestamp: number): string => {
+    const date = new Date(timestamp);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    return `${day}/${month}/${year}`;
   };
 
   const filteredHistory = history.filter(entry =>
@@ -241,43 +287,49 @@ const Popup: React.FC = () => {
     formatDate(entry.timestamp).toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
     <div className={`popup-container ${darkMode ? 'dark-mode' : ''}`}>
-      <h1>{t.title}</h1>
+      <h1>{getMessage(messages, 'title')}</h1>
       <div className="tabs">
         <button
           className={`tab-button ${!showHistory && !showSettings ? 'active' : ''}`}
           onClick={() => { setShowHistory(false); setShowSettings(false); }}
         >
-          {t.homeTab}
+          {getMessage(messages, 'homeTab')}
         </button>
         <button
           className={`tab-button ${showHistory ? 'active' : ''}`}
           onClick={() => { setShowHistory(true); setShowSettings(false); }}
         >
-          {t.historyTab}
+          {getMessage(messages, 'historyTab')}
         </button>
         <button
           className={`tab-button ${showSettings ? 'active' : ''}`}
           onClick={() => { setShowHistory(false); setShowSettings(true); }}
         >
-          {t.settingsTab}
+          {getMessage(messages, 'settingsTab')}
         </button>
       </div>
       {statusMessage && <span className="status-message">{statusMessage}</span>}
       {showSettings ? (
-        <Suspense fallback={<div>{t.processing}</div>}>
+        <Suspense fallback={<div>{getMessage(messages, 'processing')}</div>}>
           <Settings
             separator={separator}
             setSeparator={setSeparator}
             removeExtension={removeExtension}
             setRemoveExtension={setRemoveExtension}
-            language={language}
-            setLanguage={setLanguage}
             darkMode={darkMode}
             setDarkMode={setDarkMode}
             notificationsEnabled={notificationsEnabled}
             setNotificationsEnabled={setNotificationsEnabled}
+            autoShareEnabled={autoShareEnabled}
+            setAutoShareEnabled={setAutoShareEnabled}
+            userLanguage={userLanguage}
+            setUserLanguage={setUserLanguage}
           />
         </Suspense>
       ) : showHistory ? (
@@ -285,7 +337,7 @@ const Popup: React.FC = () => {
           <input
             type="text"
             className="search-input"
-            placeholder={t.searchHistoryPlaceholder}
+            placeholder={getMessage(messages, 'searchHistoryPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -294,10 +346,10 @@ const Popup: React.FC = () => {
             onClick={handleClearHistory}
             disabled={filteredHistory.length === 0}
           >
-            {t.clearHistory}
+            {getMessage(messages, 'clearHistory')}
           </button>
           {filteredHistory.length === 0 ? (
-            <p>{t.noHistory}</p>
+            <p>{getMessage(messages, 'noHistory')}</p>
           ) : (
             filteredHistory.map((entry, index) => (
               <div key={index} className="history-entry">
@@ -308,17 +360,19 @@ const Popup: React.FC = () => {
                     className={`copy-button ${copyState[`history-${index}`] === 'completed' ? 'completed' : copyState[`history-${index}`] === 'failed' ? 'failed' : ''}`}
                     onClick={() => handleCopy(entry.links, `history-${index}`)}
                   >
-                    {copyState[`history-${index}`] === 'processing' ? t.copyProcessing :
-                      copyState[`history-${index}`] === 'completed' ? t.copyCompleted :
-                        copyState[`history-${index}`] === 'failed' ? t.copyFailed : t.copy}
+                    {copyState[`history-${index}`] === 'processing' ? getMessage(messages, 'copyProcessing') :
+                      copyState[`history-${index}`] === 'completed' ? getMessage(messages, 'copyCompleted') :
+                        copyState[`history-${index}`] === 'failed' ? getMessage(messages, 'copyFailed') :
+                          getMessage(messages, 'copy')}
                   </button>
                   <button
                     className={`export-button ${exportState[`history-${index}`] === 'completed' ? 'completed' : exportState[`history-${index}`] === 'failed' ? 'failed' : ''}`}
                     onClick={() => handleExportCSV(entry.links, entry.separator, `history-${index}`)}
                   >
-                    {exportState[`history-${index}`] === 'processing' ? t.exportProcessing :
-                      exportState[`history-${index}`] === 'completed' ? t.exportCompleted :
-                        exportState[`history-${index}`] === 'failed' ? t.exportFailed : t.export}
+                    {exportState[`history-${index}`] === 'processing' ? getMessage(messages, 'exportProcessing') :
+                      exportState[`history-${index}`] === 'completed' ? getMessage(messages, 'exportCompleted') :
+                        exportState[`history-${index}`] === 'failed' ? getMessage(messages, 'exportFailed') :
+                          getMessage(messages, 'export')}
                   </button>
                 </div>
                 <pre>{entry.links}</pre>
@@ -329,7 +383,7 @@ const Popup: React.FC = () => {
       ) : (
         <div className="links-container">
           {totalFiles > 0 && (
-            <p className="total-files">{t.totalFiles}{totalFiles}</p>
+            <p className="total-files">{getMessage(messages, 'totalFiles')}{totalFiles}</p>
           )}
           <div className="links-box">
             <div className="button-container">
@@ -338,25 +392,30 @@ const Popup: React.FC = () => {
                 onClick={handleGetLinks}
                 disabled={isScraping}
               >
-                {isScraping ? t.processing : buttonState === 'completed' ? t.completed : buttonState === 'failed' ? t.failed : t.getLinks}
+                {isScraping ? getMessage(messages, 'processing') :
+                  buttonState === 'completed' ? getMessage(messages, 'completed') :
+                    buttonState === 'failed' ? getMessage(messages, 'failed') :
+                      getMessage(messages, 'getLinks')}
               </button>
               <button
                 className={`copy-button ${copyState['main'] === 'completed' ? 'completed' : copyState['main'] === 'failed' ? 'failed' : ''}`}
                 onClick={() => handleCopy(output, 'main')}
                 disabled={!output}
               >
-                {copyState['main'] === 'processing' ? t.copyProcessing :
-                  copyState['main'] === 'completed' ? t.copyCompleted :
-                    copyState['main'] === 'failed' ? t.copyFailed : t.copy}
+                {copyState['main'] === 'processing' ? getMessage(messages, 'copyProcessing') :
+                  copyState['main'] === 'completed' ? getMessage(messages, 'copyCompleted') :
+                    copyState['main'] === 'failed' ? getMessage(messages, 'copyFailed') :
+                      getMessage(messages, 'copy')}
               </button>
               <button
                 className={`export-button ${exportState['main'] === 'completed' ? 'completed' : exportState['main'] === 'failed' ? 'failed' : ''}`}
                 onClick={() => handleExportCSV(output, separator, 'main')}
                 disabled={!output}
               >
-                {exportState['main'] === 'processing' ? t.exportProcessing :
-                  exportState['main'] === 'completed' ? t.exportCompleted :
-                    exportState['main'] === 'failed' ? t.exportFailed : t.export}
+                {exportState['main'] === 'processing' ? getMessage(messages, 'exportProcessing') :
+                  exportState['main'] === 'completed' ? getMessage(messages, 'exportCompleted') :
+                    exportState['main'] === 'failed' ? getMessage(messages, 'exportFailed') :
+                      getMessage(messages, 'export')}
               </button>
             </div>
             <textarea
