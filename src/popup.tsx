@@ -106,11 +106,11 @@ const Popup: React.FC = () => {
             const checkElements = async () => {
               const fileElements = document.querySelectorAll('div.WYuW0e[data-id]');
               const bodyFrame = document.querySelector('div > c-wiz.PEfnhb');
-              if (fileElements.length > 0) {
+              if ((document.readyState == 'complete') && (fileElements.length > 0)) {
                 if (bodyFrame) {
-                  bodyFrame.scrollTo(0, bodyFrame.scrollHeight);
+                  bodyFrame.scrollTo(0, bodyFrame.scrollHeight + 200);
                 } else {
-                  window.scrollTo(0, document.body.scrollHeight);
+                  window.scrollTo(0, document.body.scrollHeight + 200);
                 }
                 // Add a synchronous delay using await
                 await sleep(2000); // 2000ms delay before checking updated file elements
@@ -120,6 +120,7 @@ const Popup: React.FC = () => {
                 } else {
                   // Resolve with the final list of files
                   const files: { name: string; shareLink: string; id: string }[] = [];
+                  await sleep(2000); // 2000ms delay before checking updated file elements
                   const finalFileElements = document.querySelectorAll('div.WYuW0e[data-id]');
                   for (const el of finalFileElements) {
                     const id = el.getAttribute('data-id');
