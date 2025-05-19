@@ -70,16 +70,16 @@ const Settings: React.FC<SettingsProps> = ({
       setCustomSeparator(''); // Reset custom separator
     }
 
-    chrome.storage.local.set({ 
-      settings: { 
-        separator: newSeparator, 
-        removeExtension, 
-        darkMode, 
+    chrome.storage.local.set({
+      settings: {
+        separator: newSeparator,
+        removeExtension,
+        darkMode,
         notificationsEnabled,
         autoShareEnabled,
         userLanguage,
         customSeparator: isOtherSelected ? customSeparator : ''
-      } 
+      }
     });
   };
 
@@ -87,64 +87,64 @@ const Settings: React.FC<SettingsProps> = ({
     const newCustomSeparator = e.target.value;
     setCustomSeparator(newCustomSeparator);
     setSeparator(newCustomSeparator); // Use custom separator as the active separator
-    chrome.storage.local.set({ 
-      settings: { 
-        separator: 'other', 
-        removeExtension, 
-        darkMode, 
+    chrome.storage.local.set({
+      settings: {
+        separator: 'other',
+        removeExtension,
+        darkMode,
         notificationsEnabled,
         autoShareEnabled,
         userLanguage,
         customSeparator: newCustomSeparator
-      } 
+      }
     });
   };
 
   const handleExtensionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.checked;
     setRemoveExtension(newValue);
-    chrome.storage.local.set({ 
-      settings: { 
-        separator, 
-        removeExtension: newValue, 
-        darkMode, 
+    chrome.storage.local.set({
+      settings: {
+        separator,
+        removeExtension: newValue,
+        darkMode,
         notificationsEnabled,
         autoShareEnabled,
         userLanguage,
         customSeparator
-      } 
+      }
     });
   };
 
   const handleDarkModeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.checked;
     setDarkMode(newValue);
-    chrome.storage.local.set({ 
-      settings: { 
-        separator, 
-        removeExtension, 
-        darkMode: newValue, 
+    chrome.storage.local.set({
+      settings: {
+        separator,
+        removeExtension,
+        darkMode: newValue,
         notificationsEnabled,
         autoShareEnabled,
         userLanguage,
         customSeparator
-      } 
+      }
     });
   };
 
   const handleNotificationsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.checked;
     setNotificationsEnabled(newValue);
-    chrome.storage.local.set({ 
-      settings: { 
-        separator, 
-        removeExtension, 
-        darkMode, 
-        notificationsEnabled: newValue, 
+    chrome.storage.local.set({
+      settings: {
+        separator,
+        removeExtension,
+        darkMode,
+        notificationsEnabled: newValue,
         autoShareEnabled,
         userLanguage,
         customSeparator
-      } 
+      }
     });
   };
 
@@ -152,32 +152,32 @@ const Settings: React.FC<SettingsProps> = ({
   const handleAutoShareChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.checked;
     setAutoShareEnabled(newValue);
-    chrome.storage.local.set({ 
-      settings: { 
-        separator, 
-        removeExtension, 
-        darkMode, 
+    chrome.storage.local.set({
+      settings: {
+        separator,
+        removeExtension,
+        darkMode,
         notificationsEnabled,
-        autoShareEnabled: newValue, 
+        autoShareEnabled: newValue,
         userLanguage,
         customSeparator
-      } 
+      }
     });
   };
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newLanguage = e.target.value === '' ? null : e.target.value;
     setUserLanguage(newLanguage);
-    chrome.storage.local.set({ 
-      settings: { 
-        separator, 
-        removeExtension, 
-        darkMode, 
+    chrome.storage.local.set({
+      settings: {
+        separator,
+        removeExtension,
+        darkMode,
         notificationsEnabled,
         autoShareEnabled,
         userLanguage: newLanguage,
         customSeparator
-      } 
+      }
     });
   };
 
