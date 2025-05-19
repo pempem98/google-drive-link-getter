@@ -130,7 +130,51 @@ const Popup: React.FC = () => {
                       name = name.replace(/\.[^/.]+$/, '');
                     }
                     if (id) {
-                      files.push({ name, shareLink: `https://drive.google.com/file/d/${id}/view?usp=sharing`, id });
+                      const type = nameElement.getAttribute('aria-label')?.split(':')[0] || '';
+                      let fileLink = 'Not Available';
+                      switch (type) {
+                      case 'Google Drive Folder': {
+                        fileLink = `https://drive.google.com/drive/folders/${id}`;
+                        break;
+                      }
+                      case 'Google Apps Script': {
+                        fileLink = `https://script.google.com/home/projects/${id}/edit`;
+                        break;
+                      }
+                      case 'Google Sheets': {
+                        fileLink = `https://docs.google.com/spreadsheets/d/${id}/edit`;
+                        break;
+                      }
+                      case 'Google Docs': {
+                        fileLink = `https://docs.google.com/document/d/${id}/edit`;
+                        break;
+                      }
+                      case 'Google Slides': {
+                        fileLink = `https://docs.google.com/presentation/d/${id}/edit`;
+                        break;
+                      }
+                      case 'Google Forms': {
+                        fileLink = `https://docs.google.com/forms/d/${id}/edit`;
+                        break;
+                      }
+                      case 'Google Drawings': {
+                        fileLink = `https://docs.google.com/drawings/d/${id}/edit`;
+                        break;
+                      }
+                      case 'Google Sites': {
+                        fileLink = `https://sites.google.com/site/${id}`;
+                        break;
+                      }
+                      case 'Google My Maps': {
+                        fileLink = `https://www.google.com/maps/d/edit?mid=${id}`;
+                        break;
+                      }
+                      default: {
+                        fileLink = `https://drive.google.com/file/d/${id}/view`;
+                        break;
+                      }
+                      }
+                      files.push({ name, shareLink: fileLink, id });
                     }
                   }
                   resolve({ files, total: finalFileElements.length });
