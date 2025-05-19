@@ -17,12 +17,16 @@ export default defineConfig({
           dest: ''
         },
         {
-          src: 'asset/*',
-          dest: ''
+          src: 'src/assets/*',
+          dest: 'assets'
         },
         {
-          src: '_locales/*',
+          src: 'src/_locales/*',
           dest: '_locales'
+        },
+        {
+          src: 'src/styles/*',
+          dest: 'styles'
         }
       ]
     }),
@@ -33,6 +37,8 @@ export default defineConfig({
     }
   },
   build: {
+    minify: 'esbuild',
+    sourcemap: true,
     rollupOptions: {
       input: {
         popup: path.resolve(__dirname, 'src/popup.tsx'),
@@ -40,8 +46,14 @@ export default defineConfig({
       },
       output: {
         entryFileNames: '[name].js',
-        dir: 'dist',
-        assetFileNames: '[name].[ext]'
+        chunkFileNames: 'chunks/[name]-[hash].js',
+        assetFileNames: (assetInfo: { name?: string }) => {
+          if (assetInfo.name && assetInfo.name.endsWith('.css')) {
+            return 'styles/[name][extname]';
+          }
+          return '[name][extname]';
+        },
+        dir: 'dist'
       }
     }
   }
