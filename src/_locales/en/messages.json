@@ -1,0 +1,162 @@
+{
+  "title": {
+    "message": "Google Drive Link Getter",
+    "description": "The title of the extension"
+  },
+  "homeTab": {
+    "message": "Home",
+    "description": "Label for the Home tab"
+  },
+  "historyTab": {
+    "message": "History",
+    "description": "Label for the History tab"
+  },
+  "settingsTab": {
+    "message": "Settings",
+    "description": "Label for the Settings tab"
+  },
+  "getLinks": {
+    "message": "Get Links",
+    "description": "Label for the Get Links button"
+  },
+  "processing": {
+    "message": "Processing...",
+    "description": "Label shown while processing"
+  },
+  "completed": {
+    "message": "Completed",
+    "description": "Label shown when an action completes"
+  },
+  "failed": {
+    "message": "Failed",
+    "description": "Label shown when an action fails"
+  },
+  "copy": {
+    "message": "Copy to Clipboard",
+    "description": "Label for the Copy button"
+  },
+  "copyProcessing": {
+    "message": "Copying...",
+    "description": "Label shown while copying"
+  },
+  "copyCompleted": {
+    "message": "Copied",
+    "description": "Label shown when copying completes"
+  },
+  "copyFailed": {
+    "message": "Copy failed",
+    "description": "Label shown when copying fails"
+  },
+  "export": {
+    "message": "Export to CSV",
+    "description": "Label for the Export to CSV button"
+  },
+  "exportProcessing": {
+    "message": "Exporting...",
+    "description": "Label shown while exporting"
+  },
+  "exportCompleted": {
+    "message": "Exported",
+    "description": "Label shown when exporting completes"
+  },
+  "exportFailed": {
+    "message": "Export failed",
+    "description": "Label shown when exporting fails"
+  },
+  "clearHistory": {
+    "message": "Clear History",
+    "description": "Label for the Clear History button"
+  },
+  "noHistory": {
+    "message": "No history available.",
+    "description": "Message shown when there is no history"
+  },
+  "noFiles": {
+    "message": "No files found on this page.",
+    "description": "Message shown when no files are found"
+  },
+  "invalidPage": {
+    "message": "Please open a Google Drive page.",
+    "description": "Message shown when the page is not a Google Drive page"
+  },
+  "cleared": {
+    "message": "History cleared!",
+    "description": "Message shown when history is cleared"
+  },
+  "totalFiles": {
+    "message": "Total files: ",
+    "description": "Label for total number of files"
+  },
+  "separatorLabel": {
+    "message": "Separator character:",
+    "description": "Label for the separator setting"
+  },
+  "separatorTab": {
+    "message": "Tab",
+    "description": "Option for Tab separator"
+  },
+  "separatorSpace": {
+    "message": "Space",
+    "description": "Option for Space separator"
+  },
+  "separatorColon": {
+    "message": "Colon (:)",
+    "description": "Option for Colon separator"
+  },
+  "separatorComma": {
+    "message": "Comma (,)",
+    "description": "Option for Comma separator"
+  },
+  "separatorHyphen": {
+    "message": "Hyphen (-)",
+    "description": "Option for Hyphen separator"
+  },
+  "separatorPipe": {
+    "message": "Pipe (|)",
+    "description": "Option for Pipe separator"
+  },
+  "separatorOther": {
+    "message": "Other",
+    "description": "Option for custom separator"
+  },
+  "customSeparatorPlaceholder": {
+    "message": "Enter custom separator",
+    "description": "Placeholder for custom separator input"
+  },
+  "extensionLabel": {
+    "message": "Remove file extension (e.g., .pdf, .docx)",
+    "description": "Label for the remove file extension setting"
+  },
+  "notificationsLabel": {
+    "message": "Enable push notifications",
+    "description": "Label for the notifications setting"
+  },
+  "darkModeLabel": {
+    "message": "Dark mode",
+    "description": "Label for the dark mode setting"
+  },
+  "searchHistoryPlaceholder": {
+    "message": "Search by title or date...",
+    "description": "Placeholder for the history search input"
+  },
+  "autoShareLabel": {
+    "message": "Automatically share files if not shared",
+    "description": "Label for the auto-share setting"
+  },
+  "languageLabel": {
+    "message": "Language:",
+    "description": "Label for the language setting"
+  },
+  "languageDefault": {
+    "message": "Default (browser setting)",
+    "description": "Option for using the browser's default language"
+  },
+  "languageVietnamese": {
+    "message": "Vietnamese",
+    "description": "Option for Vietnamese language"
+  },
+  "languageEnglish": {
+    "message": "English",
+    "description": "Option for English language"
+  }
+}

@@ -1,0 +1,42 @@
+.links-container {
+  margin-bottom: 10px;
+}
+
+.total-files {
+  text-align: center;
+  font-size: 14px;
+  color: #1a73e8;
+  margin-bottom: 10px;
+}
+
+.links-box {
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.output-textarea {
+  width: 100%;
+  resize: none;
+  padding: 8px;
+  font-family: monospace;
+  border: none;
+  border-radius: 4px;
+  background-color: #e9ecef;
+  transition: border-color 0.2s ease;
+}
+
+.output-textarea:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}

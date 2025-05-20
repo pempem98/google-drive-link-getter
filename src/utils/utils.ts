@@ -1,4 +1,4 @@
-// src/utils.ts
+// src/utils/utils.ts
 interface MessageEntry {
   message: string;
   description?: string;
@@ -40,7 +40,11 @@ export const loadMessages = async (locale: string): Promise<Messages> => {
   }
 };
 
-export const getMessage = (messages: Messages, messageName: string, substitutions?: string | string[]): string => {
+export const getMessage = (
+  messages: Messages,
+  messageName: string,
+  substitutions?: string | string[]
+): string => {
   const entry = messages[messageName];
   if (!entry || !entry.message) {
     // Fallback to messageName if not found

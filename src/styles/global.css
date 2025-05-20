@@ -1,0 +1,217 @@
+.popup-container {
+  padding: 10px;
+  width: 500px;
+  background-color: #fff;
+  color: #000;
+  font-family: Arial, sans-serif;
+}
+
+.popup-container.dark-mode {
+  background-color: #1a1a1a;
+  color: #fff;
+}
+
+.popup-container.dark-mode .tabs,
+.popup-container.dark-mode .links-box,
+.popup-container.dark-mode .history-container,
+.popup-container.dark-mode .settings-container {
+  border-color: #444;
+}
+
+.popup-container.dark-mode .tab-button,
+.popup-container.dark-mode .get-links-button,
+.popup-container.dark-mode .copy-button,
+.popup-container.dark-mode .export-button,
+.popup-container.dark-mode .clear-history-button {
+  background-color: #333;
+  color: #fff;
+  transition: background-color 0.2s ease;
+}
+
+.popup-container.dark-mode .tab-button:hover,
+.popup-container.dark-mode .get-links-button:hover,
+.popup-container.dark-mode .copy-button:hover,
+.popup-container.dark-mode .export-button:hover,
+.popup-container.dark-mode .clear-history-button:hover {
+  background-color: #444;
+}
+
+.popup-container.dark-mode .tab-button.active {
+  background-color: #1a73e8;
+}
+
+.popup-container.dark-mode .get-links-button.completed,
+.popup-container.dark-mode .copy-button.completed,
+.popup-container.dark-mode .export-button.completed {
+  background-color: #28a745;
+}
+
+.popup-container.dark-mode .get-links-button.completed:hover,
+.popup-container.dark-mode .copy-button.completed:hover,
+.popup-container.dark-mode .export-button.completed:hover {
+  background-color: #218838;
+}
+
+.popup-container.dark-mode .get-links-button.failed,
+.popup-container.dark-mode .copy-button.failed,
+.popup-container.dark-mode .export-button.failed {
+  background-color: #dc3545;
+}
+
+.popup-container.dark-mode .get-links-button.failed:hover,
+.popup-container.dark-mode .copy-button.failed:hover,
+.popup-container.dark-mode .export-button.failed:hover {
+  background-color: #c82333;
+}
+
+.popup-container.dark-mode .output-textarea,
+.popup-container.dark-mode .history-entry pre {
+  background-color: #2a2a2a;
+  color: #fff;
+}
+
+.popup-container.dark-mode .search-input,
+.popup-container.dark-mode .custom-separator-input {
+  background-color: #2a2a2a;
+  color: #fff;
+  border-color: #444;
+}
+
+.popup-container.dark-mode select {
+  background-color: #2a2a2a;
+  color: #fff;
+  border-color: #444;
+}
+
+.popup-container.dark-mode select option {
+  background-color: #2a2a2a;
+  color: #fff;
+}
+
+h1 {
+  font-size: 24px;
+  text-align: center;
+  margin-bottom: 10px;
+  font-weight: 900;
+}
+
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.tab-button {
+  padding: 6px 12px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.tab-button:hover {
+  background-color: #5a6268;
+}
+
+.tab-button.active {
+  background-color: #1a73e8;
+}
+
+.tab-button.active:hover {
+  background-color: #1351c6;
+}
+
+.get-links-button,
+.copy-button,
+.export-button,
+.clear-history-button {
+  padding: 8px 16px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.get-links-button {
+  background-color: #1a73e8;
+}
+
+.get-links-button:hover {
+  background-color: #1351c6;
+}
+
+.get-links-button.completed {
+  background-color: #28a745;
+}
+
+.get-links-button.completed:hover {
+  background-color: #218838;
+}
+
+.get-links-button.failed {
+  background-color: #dc3545;
+}
+
+.get-links-button.failed:hover {
+  background-color: #c82333;
+}
+
+.get-links-button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.copy-button:hover,
+.export-button:hover,
+.clear-history-button:hover {
+  background-color: #5a6268;
+}
+
+.copy-button.completed,
+.export-button.completed {
+  background-color: #28a745;
+}
+
+.copy-button.completed:hover,
+.export-button.completed:hover {
+  background-color: #218838;
+}
+
+.copy-button.failed,
+.export-button.failed {
+  background-color: #dc3545;
+}
+
+.copy-button.failed:hover,
+.export-button.failed:hover {
+  background-color: #c82333;
+}
+
+.copy-button:disabled,
+.export-button:disabled,
+.clear-history-button:disabled {
+  background-color: #adb5bd;
+  cursor: not-allowed;
+}
+
+.status-message {
+  display: block;
+  text-align: center;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.status-message:contains("Copied"),
+.status-message:contains("Exported"),
+.status-message:contains("cleared") {
+  color: #28a745;
+}
+
+.status-message:contains("failed") {
+  color: #dc3545;
+}
