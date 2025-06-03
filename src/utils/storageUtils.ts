@@ -1,4 +1,5 @@
-import { HistoryEntry } from '../types';
+// src/utils/storageUtils.ts
+import { HistoryEntry, UserSettings } from '../types'; // Import UserSettings
 
 export const saveHistory = (
   newEntry: HistoryEntry,
@@ -14,8 +15,7 @@ export const saveHistory = (
   });
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const saveSettings = (settings: any, callback?: () => void) => {
+export const saveSettings = (settings: UserSettings, callback?: () => void) => { // Sử dụng UserSettings
   chrome.storage.local.set({ settings }, callback);
 };
 

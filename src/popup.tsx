@@ -1,3 +1,4 @@
+// src/popup.tsx
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import './styles/index.css';
@@ -7,13 +8,14 @@ import { saveHistory, clearHistory } from './utils/storageUtils';
 import { useMessages } from './hooks/useMessages';
 import HomeTab from './components/HomeTab';
 import HistoryTab from './components/HistoryTab';
-import { DriveFile, HistoryEntry } from './types';
+import { DriveFile, HistoryEntry, HistorySortOption } from './types'; // Import HistorySortOption
 
 // Lazy load settings component
 const Settings = lazy(() => import('./components/Settings'));
 
 const Popup: React.FC = () => {
   const [output, setOutput] = useState<string>('');
+  const [fileNamesOnlyOutput, setFileNamesOnlyOutput] = useState<string>('');
   const [buttonState, setButtonState] = useState<'idle' | 'completed' | 'failed'>('idle');
   const [copyState, setCopyState] = useState<{ [key: string]: 'idle' | 'processing' | 'completed' | 'failed' }>({});
   const [exportState, setExportState] = useState<{ [key: string]: 'idle' | 'processing' | 'completed' | 'failed' }>({});
@@ -23,7 +25,7 @@ const Popup: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [currentTabTitle, setCurrentTabTitle] = useState('');
-  const [separator, setSeparator] = useState<string>('\t'); // Default: Tab
+  const [separator, setSeparator] = useState<string>('\t');
   const [customSeparator, setCustomSeparator] = useState<string>('');
   const [removeExtension, setRemoveExtension] = useState<boolean>(false);
   const [totalFiles, setTotalFiles] = useState<number>(0);
@@ -32,6 +34,8 @@ const Popup: React.FC = () => {
   const [autoShareEnabled, setAutoShareEnabled] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [userLanguage, setUserLanguage] = useState<string | null>(null);
+  const [copyFileNamesOnly, setCopyFileNamesOnly] = useState<boolean>(false);
+  const [historySortOption, setHistorySortOption] = useState<HistorySortOption>('time_desc'); // <-- State mới
 
   const { messages, isLoading } = useMessages(userLanguage);
 
@@ -49,6 +53,8 @@ const Popup: React.FC = () => {
         setNotificationsEnabled(result.settings.notificationsEnabled !== false);
         setAutoShareEnabled(result.settings.autoShareEnabled || false);
         setUserLanguage(result.settings.userLanguage || null);
+        setCopyFileNamesOnly(result.settings.copyFileNamesOnly || false);
+        // setHistorySortOption(result.settings.sortHistoryBy || 'time_desc'); // Tùy chọn: nếu bạn lưu cài đặt sắp xếp
       }
     });
   }, []);
@@ -57,13 +63,14 @@ const Popup: React.FC = () => {
     setIsScraping(true);
     setButtonState('idle');
     setOutput('');
+    setFileNamesOnlyOutput('');
     setTotalFiles(0);
   
     try {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      console.log('handleGetLinks: Tab queried:', tab); // Debug log
+      console.log('handleGetLinks: Tab queried:', tab);
       if (!tab.url?.startsWith('https://drive.google.com/')) {
-        console.log('handleGetLinks: Invalid URL, failing...'); // Debug log
+        console.log('handleGetLinks: Invalid URL, failing...');
         setOutput(getMessage(messages, 'invalidPage'));
         setButtonState('failed');
         setTimeout(() => setButtonState('idle'), 3000);
@@ -78,17 +85,17 @@ const Popup: React.FC = () => {
         throw new Error('Tab ID is undefined');
       }
   
-      console.log('handleGetLinks: Calling extractFiles...'); // Debug log
+      console.log('handleGetLinks: Calling extractFiles...');
       const { files, total } = await extractFiles(tab.id, removeExtension).catch((error) => {
-        console.error('handleGetLinks: extractFiles failed:', error); // Debug log
-        throw error; // Re-throw to be caught by outer try-catch
+        console.error('handleGetLinks: extractFiles failed:', error);
+        throw error;
       });
-      console.log('handleGetLinks: extractFiles result:', { files, total }); // Debug log
+      console.log('handleGetLinks: extractFiles result:', { files, total });
       const totalFiles = total || 0;
-      const updatedFiles = files || [];
-  
+      const updatedFiles: DriveFile[] = files || [];
+
       if (updatedFiles.length === 0) {
-        console.log('handleGetLinks: No files found, failing...'); // Debug log
+        console.log('handleGetLinks: No files found, failing...');
         setOutput(getMessage(messages, 'noFiles'));
         setButtonState('failed');
         setTimeout(() => setButtonState('idle'), 3000);
@@ -103,6 +110,10 @@ const Popup: React.FC = () => {
         .map((file: DriveFile) => `${file.name}${activeSeparator}${file.shareLink}`)
         .join('\n');
       setOutput(outputText);
+
+      const fileNamesOnly = updatedFiles.map((file: DriveFile) => file.name).join('\n');
+      setFileNamesOnlyOutput(fileNamesOnly);
+      
       setButtonState('completed');
   
       saveHistory(
@@ -125,29 +136,33 @@ const Popup: React.FC = () => {
   
       setTimeout(() => setButtonState('idle'), 3000);
     } catch (error) {
-      console.error('handleGetLinks: Error:', error); // Debug log
+      console.error('handleGetLinks: Error:', error);
       setOutput(`Lỗi: ${error instanceof Error ? error.message : 'Lỗi không xác định'}`);
       setButtonState('failed');
       setTimeout(() => setButtonState('idle'), 3000);
     } finally {
       setIsScraping(false);
-      console.log('handleGetLinks: Complete, isScraping:', false); // Debug log
+      console.log('handleGetLinks: Complete, isScraping:', false);
     }
   };
 
   const handleCopy = async (text: string, key: string) => {
     setCopyState((prev) => ({ ...prev, [key]: 'processing' }));
+    const textToCopy = copyFileNamesOnly ? fileNamesOnlyOutput : text;
+    const successMessageKey = copyFileNamesOnly ? 'copiedFileNames' : 'copyCompleted';
+    const failMessageKey = copyFileNamesOnly ? 'copyFileNamesFailed' : 'copyFailed';
+
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(textToCopy);
       setCopyState((prev) => ({ ...prev, [key]: 'completed' }));
-      setStatusMessage(getMessage(messages, 'copyCompleted') + '!');
+      setStatusMessage(getMessage(messages, successMessageKey) + '!');
       setTimeout(() => {
         setCopyState((prev) => ({ ...prev, [key]: 'idle' }));
         setStatusMessage('');
       }, 2000);
     } catch (error) {
       setCopyState((prev) => ({ ...prev, [key]: 'failed' }));
-      setStatusMessage(getMessage(messages, 'copyFailed') + '!');
+      setStatusMessage(getMessage(messages, failMessageKey) + '!');
       setTimeout(() => {
         setCopyState((prev) => ({ ...prev, [key]: 'idle' }));
         setStatusMessage('');
@@ -252,6 +267,8 @@ const Popup: React.FC = () => {
                   setAutoShareEnabled={setAutoShareEnabled}
                   userLanguage={userLanguage}
                   setUserLanguage={setUserLanguage}
+                  copyFileNamesOnly={copyFileNamesOnly}
+                  setCopyFileNamesOnly={setCopyFileNamesOnly}
                 />
               );
             } catch (error) {
@@ -272,6 +289,9 @@ const Popup: React.FC = () => {
           handleExportCSV={handleExportCSV}
           handleClearHistory={handleClearHistory}
           formatDate={formatDate}
+          copyFileNamesOnly={copyFileNamesOnly}
+          currentSort={historySortOption} // <-- Truyền state sắp xếp
+          setSort={setHistorySortOption}   // <-- Truyền setter sắp xếp
         />
       ) : (
         <HomeTab
@@ -286,6 +306,8 @@ const Popup: React.FC = () => {
           handleGetLinks={handleGetLinks}
           handleCopy={handleCopy}
           handleExportCSV={handleExportCSV}
+          copyFileNamesOnly={copyFileNamesOnly}
+          fileNamesOnlyOutput={fileNamesOnlyOutput}
         />
       )}
     </div>

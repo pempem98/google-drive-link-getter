@@ -158,5 +158,37 @@
   "languageEnglish": {
     "message": "English",
     "description": "Option for English language"
+  },
+  "copyFileNamesOnlyLabel": {
+    "message": "Copy file names only (without links)",
+    "description": "Label for the setting to copy only file names"
+  },
+  "copiedFileNames": {
+    "message": "Copied file names!",
+    "description": "Message shown when only file names are copied"
+  },
+  "copyFileNamesFailed": {
+    "message": "Copy file names failed!",
+    "description": "Message shown when copying file names fails"
+  },
+  "sortBy": {
+    "message": "Sort by:",
+    "description": "Label for sort by option"
+  },
+  "sortTimeAsc": {
+    "message": "Time (Oldest first)",
+    "description": "Sort option: Time ascending"
+  },
+  "sortTimeDesc": {
+    "message": "Time (Newest first)",
+    "description": "Sort option: Time descending"
+  },
+  "sortNameAsc": {
+    "message": "Name (A-Z)",
+    "description": "Sort option: Name A-Z"
+  },
+  "sortNameDesc": {
+    "message": "Name (Z-A)",
+    "description": "Sort option: Name Z-A"
   }
 }

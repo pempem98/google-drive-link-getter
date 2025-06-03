@@ -158,5 +158,37 @@
   "languageEnglish": {
     "message": "Tiếng Anh",
     "description": "Option for English language"
+  },
+  "copyFileNamesOnlyLabel": {
+    "message": "Chỉ sao chép tên tệp (không kèm liên kết)",
+    "description": "Label for the setting to copy only file names"
+  },
+  "copiedFileNames": {
+    "message": "Đã sao chép tên tệp!",
+    "description": "Message shown when only file names are copied"
+  },
+  "copyFileNamesFailed": {
+    "message": "Sao chép tên tệp thất bại!",
+    "description": "Message shown when copying file names fails"
+  },
+  "sortBy": {
+    "message": "Sắp xếp theo:",
+    "description": "Label for sort by option"
+  },
+  "sortTimeAsc": {
+    "message": "Thời gian (Cũ nhất trước)",
+    "description": "Sort option: Time ascending"
+  },
+  "sortTimeDesc": {
+    "message": "Thời gian (Mới nhất trước)",
+    "description": "Sort option: Time descending"
+  },
+  "sortNameAsc": {
+    "message": "Tên (A-Z)",
+    "description": "Sort option: Name A-Z"
+  },
+  "sortNameDesc": {
+    "message": "Tên (Z-A)",
+    "description": "Sort option: Name Z-A"
   }
 }
