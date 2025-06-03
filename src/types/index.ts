@@ -1,3 +1,4 @@
+// src/types/index.ts
 export interface DriveFile {
   name: string;
   shareLink: string;
@@ -14,3 +15,17 @@ export interface HistoryEntry {
 export interface Messages {
   [key: string]: { message: string; description?: string };
 }
+
+export interface UserSettings {
+  separator: string;
+  customSeparator: string;
+  removeExtension: boolean;
+  darkMode: boolean;
+  notificationsEnabled: boolean;
+  autoShareEnabled: boolean;
+  userLanguage: string | null;
+  copyFileNamesOnly: boolean;
+  // sortHistoryBy?: HistorySortOption; // Tùy chọn: Nếu bạn muốn lưu cài đặt sắp xếp
+}
+
+export type HistorySortOption = 'time_desc' | 'time_asc' | 'name_asc' | 'name_desc'; // <-- Thêm loại sắp xếp

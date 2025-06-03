@@ -1,9 +1,10 @@
+// src/components/HomeTab.tsx
 import React from 'react';
 import { getMessage } from '../utils/utils'; // Updated path
-// import { DriveFile } from '../types';
 
 interface HomeTabProps {
   output: string;
+  fileNamesOnlyOutput: string; // <-- Thêm prop mới
   buttonState: 'idle' | 'completed' | 'failed';
   copyState: { [key: string]: 'idle' | 'processing' | 'completed' | 'failed' };
   exportState: { [key: string]: 'idle' | 'processing' | 'completed' | 'failed' };
@@ -14,10 +15,12 @@ interface HomeTabProps {
   handleGetLinks: () => void;
   handleCopy: (text: string, key: string) => void;
   handleExportCSV: (links: string, separator: string, key: string) => void;
+  copyFileNamesOnly: boolean; // <-- Thêm prop mới
 }
 
 const HomeTab: React.FC<HomeTabProps> = ({
   output,
+  fileNamesOnlyOutput, // <-- Sử dụng prop mới
   buttonState,
   copyState,
   exportState,
@@ -28,6 +31,7 @@ const HomeTab: React.FC<HomeTabProps> = ({
   handleGetLinks,
   handleCopy,
   handleExportCSV,
+  copyFileNamesOnly, // <-- Sử dụng prop mới
 }) => {
   return (
     <div className="links-container">
@@ -69,7 +73,7 @@ const HomeTab: React.FC<HomeTabProps> = ({
         </div>
         <textarea
           className="output-textarea"
-          value={output}
+          value={copyFileNamesOnly ? fileNamesOnlyOutput : output} // <-- Logic hiển thị
           readOnly
           rows={10}
         />

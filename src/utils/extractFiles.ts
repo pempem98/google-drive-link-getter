@@ -78,16 +78,16 @@ export const extractFiles = async (
               console.log('checkElements: document.readyState:', document.readyState, 'fileElements.length:', fileElements.length);
               if (document.readyState === 'complete' && fileElements.length > 0) {
                 console.log('checkElements: Found files, preparing to scroll...');
-                // Increased delay to 2000ms to allow Google Drive scripts to initialize
-                await sleep(2000); // 2000ms delay before scrolling
+                // Increased delay to 1000ms to allow Google Drive scripts to initialize
+                await sleep(1000); // 1000ms delay before scrolling
                 console.log('checkElements: Scrolling...');
                 if (bodyFrame) {
                   bodyFrame.scrollTo(0, bodyFrame.scrollHeight + 200);
                 } else {
                   window.scrollTo(0, document.body.scrollHeight + 200);
                 }
-                // Reduced delay to 1000ms after scrolling
-                await sleep(1000); // 1000ms delay before checking updated file elements
+                // Reduced delay to 500ms after scrolling
+                await sleep(500); // 500ms delay before checking updated file elements
                 const updatedFileElements = document.querySelectorAll('div.WYuW0e[data-id]');
                 console.log('checkElements: updatedFileElements.length:', updatedFileElements.length);
                 if (updatedFileElements.length > fileElements.length) {
@@ -95,8 +95,8 @@ export const extractFiles = async (
                   checkElements();
                 } else {
                   console.log('checkElements: No more files, resolving...');
-                  // Reduced delay to 1000ms
-                  await sleep(1000); // 1000ms delay before collecting final file elements
+                  // Reduced delay to 500ms
+                  await sleep(500); // 500ms delay before collecting final file elements
                   const finalFileElements = document.querySelectorAll('div.WYuW0e[data-id]');
                   const files: { name: string; shareLink: string; id: string; type: string }[] = [];
                   for (const el of finalFileElements) {

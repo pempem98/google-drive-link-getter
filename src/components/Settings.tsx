@@ -1,3 +1,4 @@
+// src/components/Settings.tsx
 import React, { useState, useEffect } from 'react';
 import LanguageSetting from './LanguageSetting';
 import SeparatorSetting from './SeparatorSetting';
@@ -5,7 +6,7 @@ import CheckboxSetting from './CheckboxSetting';
 import { useMessages } from '../hooks/useMessages';
 import { saveSettings } from '../utils/storageUtils';
 import { getMessage } from '../utils/utils';
-// import { Messages } from '../types';
+import { UserSettings } from '../types'; // Import UserSettings
 
 interface SettingsProps {
   separator: string;
@@ -20,6 +21,8 @@ interface SettingsProps {
   setAutoShareEnabled: (value: boolean) => void;
   userLanguage: string | null;
   setUserLanguage: (value: string | null) => void;
+  copyFileNamesOnly: boolean; // <-- Thêm prop này
+  setCopyFileNamesOnly: (value: boolean) => void; // <-- Thêm prop này
 }
 
 const Settings: React.FC<SettingsProps> = ({
@@ -32,9 +35,11 @@ const Settings: React.FC<SettingsProps> = ({
   notificationsEnabled,
   setNotificationsEnabled,
   autoShareEnabled,
-  // setAutoShareEnabled,
+  setAutoShareEnabled, // Giữ nguyên prop này
   userLanguage,
   setUserLanguage,
+  copyFileNamesOnly, // <-- Sử dụng prop này
+  setCopyFileNamesOnly, // <-- Sử dụng prop này
 }) => {
   const { messages, isLoading } = useMessages(userLanguage);
   const [customSeparator, setCustomSeparator] = useState<string>('');
@@ -51,70 +56,60 @@ const Settings: React.FC<SettingsProps> = ({
     });
   }, []);
 
-  const handleSeparatorChange = (newSeparator: string, newCustomSeparator: string) => {
+  const saveCurrentSettings = (updatedSettings: Partial<UserSettings>) => {
     saveSettings({
-      separator: newSeparator,
+      separator,
       removeExtension,
       darkMode,
       notificationsEnabled,
       autoShareEnabled,
       userLanguage,
-      customSeparator: newCustomSeparator,
+      customSeparator,
+      copyFileNamesOnly, // <-- Đảm bảo thuộc tính này được lưu
+      ...updatedSettings, // Ghi đè các cài đặt cụ thể nếu có
     });
+  };
+
+  const handleSeparatorChange = (newSeparator: string, newCustomSeparator: string) => {
+    setSeparator(newSeparator);
+    setCustomSeparator(newCustomSeparator);
+    saveCurrentSettings({ separator: newSeparator, customSeparator: newCustomSeparator });
   };
 
   const handleExtensionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.checked;
     setRemoveExtension(newValue);
-    saveSettings({
-      separator,
-      removeExtension: newValue,
-      darkMode,
-      notificationsEnabled,
-      autoShareEnabled,
-      userLanguage,
-      customSeparator,
-    });
+    saveCurrentSettings({ removeExtension: newValue });
   };
 
   const handleDarkModeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.checked;
     setDarkMode(newValue);
-    saveSettings({
-      separator,
-      removeExtension,
-      darkMode: newValue,
-      notificationsEnabled,
-      autoShareEnabled,
-      userLanguage,
-      customSeparator,
-    });
+    saveCurrentSettings({ darkMode: newValue });
   };
 
   const handleNotificationsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.checked;
     setNotificationsEnabled(newValue);
-    saveSettings({
-      separator,
-      removeExtension,
-      darkMode,
-      notificationsEnabled: newValue,
-      autoShareEnabled,
-      userLanguage,
-      customSeparator,
-    });
+    saveCurrentSettings({ notificationsEnabled: newValue });
+  };
+
+  const handleCopyFileNamesOnlyChange = (e: React.ChangeEvent<HTMLInputElement>) => { // <-- Thêm hàm xử lý mới
+    const newValue = e.target.checked;
+    setCopyFileNamesOnly(newValue);
+    saveCurrentSettings({ copyFileNamesOnly: newValue });
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleAutoShareChange = (e: React.ChangeEvent<HTMLInputElement>) => { // Đảm bảo hàm này tồn tại nếu bạn bật lại autoShareEnabled
+    const newValue = e.target.checked;
+    setAutoShareEnabled(newValue);
+    saveCurrentSettings({ autoShareEnabled: newValue });
   };
 
   const handleLanguageChange = (newLanguage: string | null) => {
-    saveSettings({
-      separator,
-      removeExtension,
-      darkMode,
-      notificationsEnabled,
-      autoShareEnabled,
-      userLanguage: newLanguage,
-      customSeparator,
-    });
+    setUserLanguage(newLanguage);
+    saveCurrentSettings({ userLanguage: newLanguage });
   };
 
   console.log('Settings component rendering, isLoading:', isLoading); // Debug log
@@ -161,12 +156,18 @@ const Settings: React.FC<SettingsProps> = ({
         onChange={handleNotificationsChange}
         messages={messages}
       />
+      <CheckboxSetting // <-- Thêm checkbox mới
+        label="copyFileNamesOnlyLabel"
+        checked={copyFileNamesOnly}
+        onChange={handleCopyFileNamesOnlyChange}
+        messages={messages}
+      />
       {/* Temporarily disabled auto-share option */}
       {/*
       <CheckboxSetting
         label="autoShareLabel"
         checked={autoShareEnabled}
-        onChange={handleAutoShareChange}
+        onChange={handleAutoShareChange} // Bỏ comment nếu bật lại
         messages={messages}
       />
       */}

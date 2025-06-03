@@ -1,3 +1,4 @@
+/* src/styles/historyTab.css */
 .history-container {
   max-height: 300px;
   overflow-y: auto;
@@ -17,6 +18,41 @@
 }
 
 .search-input:focus {
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+}
+
+/* Thêm styles mới cho controls và sort */
+.history-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap; /* Cho phép xuống dòng nếu không đủ chỗ */
+  gap: 10px; /* Khoảng cách giữa các phần tử */
+}
+
+.sort-by-container {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.sort-by-container label {
+  font-weight: 500;
+  white-space: nowrap; /* Ngăn label xuống dòng */
+}
+
+.sort-select {
+  padding: 6px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  background-color: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.sort-select:focus {
   outline: none;
   border-color: #1a73e8;
   box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
