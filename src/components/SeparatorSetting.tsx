@@ -1,5 +1,5 @@
 import React from 'react';
-import { getMessage } from '../utils/utils'; // Updated path
+import { getMessage } from '../utils/utils';
 import { Messages } from '../types';
 
 interface SeparatorSettingProps {

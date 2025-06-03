@@ -24,16 +24,16 @@ export const loadMessages = async (locale: string): Promise<Messages> => {
     messagesCache[locale] = messages;
     return messages;
   } catch (error) {
-    // eslint-disable-next-line no-console
+
     console.error(error);
-    // Fallback to default locale 'vi'
+
     if (locale !== 'vi') {
       const fallbackMessages = await loadMessages('vi');
       messagesCache[locale] = fallbackMessages;
       return fallbackMessages;
     }
-    // If even 'vi' fails, return an empty object with a warning
-    // eslint-disable-next-line no-console
+
+
     console.warn('Failed to load messages for default locale "vi".');
     messagesCache[locale] = {};
     return {};
@@ -47,7 +47,7 @@ export const getMessage = (
 ): string => {
   const entry = messages[messageName];
   if (!entry || !entry.message) {
-    // Fallback to messageName if not found
+
     return messageName;
   }
 

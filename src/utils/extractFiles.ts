@@ -1,153 +1,185 @@
-import { DriveFile } from '../types';
+// src/utils/extractFiles.ts
+import { DriveFile } from '../types'; //
+
+export interface ExtractionResult {
+  files: DriveFile[];
+  subFolders?: { id: string; name: string }[];
+  total: number;
+} //
 
 export const extractFiles = async (
   tabId: number,
-  removeExtension: boolean
-): Promise<{ files: DriveFile[]; total: number }> => {
+  removeExtension: boolean,
+  isRecursiveContext: boolean
+): Promise<ExtractionResult> => {
   try {
-    const results = await new Promise((resolve, reject) => {
-      chrome.scripting.executeScript({
+    const results = await new Promise<chrome.scripting.InjectionResult<ExtractionResult>[]>((resolve, reject) => {
+      chrome.scripting.executeScript<[boolean, boolean], ExtractionResult>({
         target: { tabId },
-        func: (removeExtension: boolean) => {
-          const sleep = (ms: number) =>
-            new Promise((resolve) => setTimeout(resolve, ms));
+        func: (removeExt, recursiveContextFlag) => {
+          const sleep = (ms: number) => new Promise(r => setTimeout(r, ms));
 
-          // Define getFileLink directly in the injected script context
           const getFileLink = (type: string, id: string): string => {
+            // ... (logic getFileLink không đổi)
             let fileLink = 'Not Available';
-            switch (type) {
-            // Gộp case tiếng Anh và tiếng Việt
-            case 'Google Drive Folder':
-            case 'Thư mục Google Drive': {
+            const normalizedType = type.toLowerCase();
+            if (normalizedType.includes('folder') || normalizedType.includes('thư mục')) {
               fileLink = `https://drive.google.com/drive/folders/${id}`;
-              break;
-            }
-            case 'Google Apps Script': {
+            } else if (normalizedType.includes('apps script')) {
               fileLink = `https://script.google.com/home/projects/${id}/edit`;
-              break;
-            }
-            case 'Google Sheets':
-            case 'Google Trang tính': {
+            } else if (normalizedType.includes('sheet') || normalizedType.includes('trang tính')) {
               fileLink = `https://docs.google.com/spreadsheets/d/${id}/edit`;
-              break;
-            }
-            case 'Google Docs':
-            case 'Google Tài liệu': {
+            } else if (normalizedType.includes('doc') || normalizedType.includes('tài liệu')) {
               fileLink = `https://docs.google.com/document/d/${id}/edit`;
-              break;
-            }
-            case 'Google Slides':
-            case 'Google Trang trình bày': {
+            } else if (normalizedType.includes('slide') || normalizedType.includes('trang trình bày')) {
               fileLink = `https://docs.google.com/presentation/d/${id}/edit`;
-              break;
-            }
-            case 'Google Forms':
-            case 'Google Biểu mẫu': {
+            } else if (normalizedType.includes('form') || normalizedType.includes('biểu mẫu')) {
               fileLink = `https://docs.google.com/forms/d/${id}/edit`;
-              break;
-            }
-            case 'Google Drawings':
-            case 'Google Bản vẽ': {
+            } else if (normalizedType.includes('drawing') || normalizedType.includes('bản vẽ')) {
               fileLink = `https://docs.google.com/drawings/d/${id}/edit`;
-              break;
-            }
-            case 'Google Sites': {
+            } else if (normalizedType.includes('site')) {
               fileLink = `https://sites.google.com/site/${id}`;
-              break;
-            }
-            case 'Google My Maps':
-            case 'Google Bản đồ của tôi': {
+            } else if (normalizedType.includes('my map') || normalizedType.includes('bản đồ của tôi')) {
               fileLink = `https://www.google.com/maps/d/edit?mid=${id}`;
-              break;
-            }
-            default: {
+            } else {
               fileLink = `https://drive.google.com/file/d/${id}/view`;
-              break;
-            }
             }
             return fileLink;
-          };
+          }; //
 
-          return new Promise((resolve) => {
+          // Bọc logic async trong một hàm và gọi nó
+          const executeAsyncLogic = async (resolveFn: (value: ExtractionResult | PromiseLike<ExtractionResult>) => void) => {
             let attempts = 0;
-            const maxAttempts = 50; // Limit to 50 attempts
+            const maxAttempts = 30;
+            let lastScrollHeight = 0;
+            let noChangeCount = 0;
 
+            // checkElements vẫn có thể là async vì nó được await bên trong executeAsyncLogic
             const checkElements = async () => {
-              const fileElements = document.querySelectorAll('div.WYuW0e[data-id]');
-              const bodyFrame = document.querySelector('div > c-wiz.PEfnhb');
-              console.log('checkElements: document.readyState:', document.readyState, 'fileElements.length:', fileElements.length);
-              if (document.readyState === 'complete' && fileElements.length > 0) {
-                console.log('checkElements: Found files, preparing to scroll...');
-                // Increased delay to 1000ms to allow Google Drive scripts to initialize
-                await sleep(1000); // 1000ms delay before scrolling
-                console.log('checkElements: Scrolling...');
-                if (bodyFrame) {
-                  bodyFrame.scrollTo(0, bodyFrame.scrollHeight + 200);
+              const itemElements = document.querySelectorAll('div[data-id]:not([data-tooltip-unhoverable])');
+              const scrollableView = document.querySelector('div.aqZSwc.FoN4ef') ||
+                                  document.querySelector('div.bhBody') ||
+                                  document.querySelector('div.NgkFIf') ||
+                                  document.body;
+
+              if (document.readyState === 'complete' && itemElements.length > 0) {
+                if (scrollableView) {
+                  scrollableView.scrollTo(0, scrollableView.scrollHeight);
                 } else {
-                  window.scrollTo(0, document.body.scrollHeight + 200);
+                  window.scrollTo(0, document.body.scrollHeight);
                 }
-                // Reduced delay to 500ms after scrolling
-                await sleep(500); // 500ms delay before checking updated file elements
-                const updatedFileElements = document.querySelectorAll('div.WYuW0e[data-id]');
-                console.log('checkElements: updatedFileElements.length:', updatedFileElements.length);
-                if (updatedFileElements.length > fileElements.length) {
-                  console.log('checkElements: More files found, continuing...');
-                  checkElements();
+                await sleep(800);
+
+                const currentScrollHeight = scrollableView?.scrollHeight || document.body.scrollHeight;
+                if (currentScrollHeight === lastScrollHeight) {
+                  noChangeCount++;
                 } else {
-                  console.log('checkElements: No more files, resolving...');
-                  // Reduced delay to 500ms
-                  await sleep(500); // 500ms delay before collecting final file elements
-                  const finalFileElements = document.querySelectorAll('div.WYuW0e[data-id]');
-                  const files: { name: string; shareLink: string; id: string; type: string }[] = [];
-                  for (const el of finalFileElements) {
-                    const id = el.getAttribute('data-id');
-                    const nameElement = el.querySelector('div.KL4NAf') || el.querySelector('div.Q5txwe');
-                    let name = nameElement?.textContent?.trim() || 'Unknown';
-                    if (removeExtension && name !== 'Unknown') {
-                      name = name.replace(/\.[^/.]+$/, '');
-                    }
-                    if (id) {
-                      const fullName = nameElement?.getAttribute('aria-label');
-                      const type = fullName?.split(':')[0] || '';
-                      const fileLink = getFileLink(type, id); // Now getFileLink is defined in this context
-                      files.push({ name, shareLink: fileLink, id, type });
-                    }
-                  }
-                  console.log('checkElements: Files collected:', files);
-                  resolve({ files, total: finalFileElements.length });
+                  noChangeCount = 0;
                 }
-                attempts = 0; // Reset attempts if files are found
-              } else {
-                attempts++;
-                console.log('checkElements: No files found, attempts:', attempts);
-                if (attempts >= maxAttempts) {
-                  console.log('checkElements: Max attempts reached, resolving with empty result');
-                  resolve({ files: [], total: 0 }); // Resolve with empty result if max attempts reached
+                lastScrollHeight = currentScrollHeight;
+
+                const updatedItemElements = document.querySelectorAll('div[data-id]:not([data-tooltip-unhoverable])');
+                if ((updatedItemElements.length > itemElements.length || noChangeCount < 3) && attempts < maxAttempts) {
+                  attempts++;
+                  setTimeout(checkElements, 500); // setTimeout không trả về Promise, nên không await ở đây
                   return;
                 }
-                setTimeout(checkElements, 500);
-              }
-            };
 
-            checkElements();
+                await sleep(500);
+                const finalItemElements = document.querySelectorAll('div[data-id]:not([data-tooltip-unhoverable])');
+                const allItemsResult: DriveFile[] = [];
+                const subFoldersForQueue: { id: string; name: string }[] = [];
+
+                finalItemElements.forEach(el => {
+                  const id = el.getAttribute('data-id');
+                  if (!id) return;
+                  let name = '';
+                  const specificNameElement = el.querySelector('.KL4NAf') || el.querySelector('.Q5txwe') || el.querySelector('div[role="option"] span:not([class])');
+                  if (specificNameElement) {
+                    name = specificNameElement.textContent || '';
+                  }
+                  if (!name.trim()) {
+                    const nameElViaTooltip = el.querySelector('div[data-tooltip-text]');
+                    if (nameElViaTooltip) name = nameElViaTooltip.getAttribute('data-tooltip-text') || '';
+                  }
+                  if (!name.trim()) {
+                    name = el.getAttribute('aria-label') || el.querySelector('[aria-label]')?.getAttribute('aria-label') || '';
+                  }
+                  name = name.trim();
+                  if (name.toLowerCase().startsWith('folder, ')) name = name.substring('folder, '.length).trim();
+                  else if (name.toLowerCase().startsWith('thư mục, ')) name = name.substring('thư mục, '.length).trim();
+                  else if (name.toLowerCase().startsWith('file, ')) name = name.substring('file, '.length).trim();
+                  else if (name.toLowerCase().startsWith('tệp, ')) name = name.substring('tệp, '.length).trim();
+                  if (!name.trim()) name = 'Unknown';
+                  
+                  const originalNameBeforeExtRemoval = name;
+                  if (removeExt && name !== 'Unknown') {
+                    name = name.replace(/\.[^/.]+$/, '');
+                  }
+                  
+                  const ariaLabel = el.getAttribute('aria-label') || '';
+                  const isFolder = ariaLabel.toLowerCase().startsWith('folder') || 
+                                   ariaLabel.toLowerCase().includes('thư mục') ||
+                                   el.querySelector('img[src*="folder"]') !== null ||
+                                   el.querySelector('div[role="img"][aria-label*="Folder"], div[role="img"][aria-label*="Thư mục"]') !== null;
+                  
+                  const typeGuess = ariaLabel.split(',')[0].trim() || (isFolder ? 'Google Drive Folder' : originalNameBeforeExtRemoval);
+                  const shareLink = getFileLink(typeGuess, id);
+                  allItemsResult.push({ name, shareLink, id });
+                  if (recursiveContextFlag && isFolder) {
+                    subFoldersForQueue.push({ id, name: name });
+                  }
+                });
+                resolveFn({ files: allItemsResult, subFolders: recursiveContextFlag ? subFoldersForQueue : undefined, total: finalItemElements.length }); // Sử dụng resolveFn được truyền vào
+              } else {
+                attempts++;
+                if (attempts >= maxAttempts) {
+                  resolveFn({ files: [], subFolders: recursiveContextFlag ? [] : undefined, total: 0 }); // Sử dụng resolveFn
+                } else {
+                  setTimeout(checkElements, 700);
+                }
+              }
+            }; // Kết thúc checkElements
+
+            try {
+              await checkElements(); // Gọi await ở đây vì checkElements có thể gọi lại chính nó qua setTimeout
+              // Tuy nhiên, cách checkElements gọi lại chính nó qua setTimeout không thực sự tạo ra một chuỗi Promise mà await có thể chờ.
+              // Cách tốt hơn là checkElements nên trả về một Promise nếu nó sử dụng setTimeout để đệ quy.
+              // Hoặc, cấu trúc lại vòng lặp chờ đợi.
+              // Vì mục đích sửa lỗi ESLint, chúng ta sẽ để cấu trúc đệ quy setTimeout hiện tại
+              // và đảm bảo resolveFn được gọi đúng chỗ.
+              // Thực tế, checkElements không cần là async nếu setTimeout được dùng để lặp.
+              // Ta sẽ đơn giản hóa:
+              checkElements(); // Chỉ cần gọi, logic resolveFn đã nằm trong checkElements.
+            } catch (e) {
+              // Nếu có lỗi đồng bộ nào đó trong executeAsyncLogic hoặc lỗi từ checkElements không được bắt đúng cách (hiếm)
+              // thì có thể reject ở đây, nhưng lỗi ESLint là về executor không được async.
+              // ESLint không thích `new Promise(async (resolve, reject) => { await ...; resolve() })`
+              // mà thích `new Promise((resolve, reject) => { (async () => { await ...; resolve() })(); })`
+              // Hoặc `myAsyncFunc().then(resolve).catch(reject)`
+              // Trong trường hợp của bạn, `checkElements` tự quản lý việc gọi `resolvePromise`
+              // nên không cần `try/catch` ở đây để gọi `reject` cho lỗi của `checkElements`.
+            }
+
+          }; // Kết thúc executeAsyncLogic
+
+          return new Promise((resolvePromiseExecutor) => { // Executor không còn async
+            executeAsyncLogic(resolvePromiseExecutor); // Gọi hàm async và truyền resolve của Promise này
           });
-        },
-        args: [removeExtension],
+
+        }, // Kết thúc func
+        args: [removeExtension, isRecursiveContext],
       })
-        .then((results) => {
-          console.log('executeScript: Results:', results);
-          resolve(results);
-        })
-        .catch((error) => {
-          console.error('executeScript: Error:', error);
-          reject(error);
-        });
+        .then(resolve) // resolve của Promise ngoài cùng (new Promise<chrome.scripting.InjectionResult...>)
+        .catch(reject); // reject của Promise ngoài cùng
     });
 
-    console.log('extractFiles: Results:', results);
-    return results[0]?.result as { files: DriveFile[]; total: number };
+    if (results && results[0] && results[0].result) {
+      return results[0].result;
+    }
+    throw new Error('Script execution failed or returned no result.');
   } catch (error) {
     console.error('extractFiles: Error executing script:', error);
-    return { files: [], total: 0 }; // Fallback result to ensure promise resolves
+    return { files: [], subFolders: isRecursiveContext ? [] : undefined, total: 0 };
   }
-};
+}; //

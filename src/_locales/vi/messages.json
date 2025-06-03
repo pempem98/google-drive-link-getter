@@ -190,5 +190,21 @@
   "sortNameDesc": {
     "message": "Tên (Z-A)",
     "description": "Sort option: Name Z-A"
+  },
+  "recursiveScanLabel": {
+    "message": "Chế độ duyệt cây thư mục",
+    "description": "Nhãn cho cài đặt chế độ duyệt cây thư mục"
+  },
+  "removeDirectoryLabel": {
+    "message": "Loại bỏ đường dẫn (chỉ hiện tên gốc)",
+    "description": "Nhãn cho cài đặt loại bỏ đường dẫn thư mục khỏi kết quả"
+  },
+  "scanningFolder": {
+    "message": "Đang quét: ",
+    "description": "Thông báo trạng thái khi đang quét một thư mục. $folderName$ là chỗ dành cho tên thư mục."
+  },
+  "genericFolderName": {
+    "message": "thư mục",
+    "description": "Từ chung cho thư mục khi không có tên cụ thể."
   }
 }

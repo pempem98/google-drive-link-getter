@@ -190,5 +190,21 @@
   "sortNameDesc": {
     "message": "Name (Z-A)",
     "description": "Sort option: Name Z-A"
+  },
+  "recursiveScanLabel": {
+    "message": "Recursive folder scan mode",
+    "description": "Label for the recursive folder scan setting"
+  },
+  "removeDirectoryLabel": {
+    "message": "Remove directory path (show base name only)",
+    "description": "Label for the setting to remove directory paths from results"
+  },
+  "scanningFolder": {
+    "message": "Scanning: ",
+    "description": "Status message shown while scanning a folder. $folderName$ is a placeholder for the folder name."
+  },
+  "genericFolderName": {
+    "message": "folder",
+    "description": "Generic term for a folder when its name is not available."
   }
 }
