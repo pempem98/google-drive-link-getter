@@ -215,3 +215,17 @@ h1 {
 .status-message:contains("failed") {
   color: #dc3545;
 }
+
+.popup-container.dark-mode .copy-tree-button {
+  background-color: #444; /* Ví dụ màu dark mode */
+  /* ... các màu khác cho hover, completed, failed ... */
+}
+.popup-container.dark-mode .copy-tree-button:hover {
+  background-color: #555;
+}
+.popup-container.dark-mode .copy-tree-button.completed {
+  background-color: #28a745;
+}
+.popup-container.dark-mode .copy-tree-button.failed {
+  background-color: #dc3545;
+}

@@ -18,6 +18,7 @@ const Popup: React.FC = () => {
   const [buttonState, setButtonState] = useState<'idle' | 'completed' | 'failed'>('idle');
   const [copyState, setCopyState] = useState<{ [key: string]: 'idle' | 'processing' | 'completed' | 'failed' }>({});
   const [exportState, setExportState] = useState<{ [key: string]: 'idle' | 'processing' | 'completed' | 'failed' }>({});
+  const [copyTreeState, setCopyTreeState] = useState<{ [key: string]: 'idle' | 'processing' | 'completed' | 'failed' }>({});
   const [isScraping, setIsScraping] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
   const [showHistory, setShowHistory] = useState(false);
@@ -61,21 +62,22 @@ const Popup: React.FC = () => {
 
   const performCopy = async (textToClipboard: string, uiUpdateKey: string, successMsgKey: string, failMsgKey: string) => {
     setCopyState((prev) => ({ ...prev, [uiUpdateKey]: 'processing' }));
+    let operationSuccess = false;
     try {
       await navigator.clipboard.writeText(textToClipboard);
       setCopyState((prev) => ({ ...prev, [uiUpdateKey]: 'completed' }));
       setStatusMessage(getMessage(messages, successMsgKey));
+      operationSuccess = true;
     } catch (error) {
       console.error('Copy failed:', error);
       setCopyState((prev) => ({ ...prev, [uiUpdateKey]: 'failed' }));
       setStatusMessage(getMessage(messages, failMsgKey));
     } finally {
       setTimeout(() => {
-        setCopyState((prev) => ({ ...prev, [uiUpdateKey]: 'idle' }));
-        // Chỉ clear status nếu không phải lỗi để user thấy lỗi, hoặc nếu là success
-        if (copyState[uiUpdateKey] === 'completed' || copyState[uiUpdateKey] === 'idle') {
+        if (operationSuccess && statusMessage === getMessage(messages, successMsgKey)) {
           setStatusMessage('');
         }
+        setCopyState((prev) => ({ ...prev, [uiUpdateKey]: 'idle' }));
       }, 2000);
     }
   };
@@ -86,29 +88,29 @@ const Popup: React.FC = () => {
     setOutput('');
     setFileNamesOnlyOutput('');
     setTotalFiles(0);
-    if (!currentTabTitle) {
-      setCurrentTabTitle('');
-    }
+    setCurrentTabTitle('');
     let originalUrl = '';
 
     try {
       const [initialTab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (!initialTab?.id || !initialTab.url) throw new Error('Invalid tab.');
+      if (!initialTab?.id || !initialTab.url) {
+        throw new Error(getMessage(messages, 'invalidTabError', 'Invalid tab.')); // Thêm fallback text
+      }
       originalUrl = initialTab.url;
 
-      if (!initialTab.url.startsWith('https://drive.google.com/')) { /* ... xử lý lỗi ... */
+      if (!initialTab.url.startsWith('https://drive.google.com/')) {
         setOutput(getMessage(messages, 'invalidPage'));
         setButtonState('failed'); setTimeout(() => setButtonState('idle'), 3000); setIsScraping(false); return;
       }
 
       let allFilesCollected: DriveFile[] = [];
       let accumulatedTotal = 0;
-      const initialTabTitleStr = initialTab.title?.replace(/ - Google Drive$/, '') || 'Google Drive';
+      const initialTabTitleStr = initialTab.title?.replace(/ - Google Drive$/, '') || getMessage(messages, 'driveScanDefaultTitle', 'Drive Scan');
       setCurrentTabTitle(initialTabTitleStr);
       const activeSeparator = separator === 'other' ? customSeparator : separator;
 
       if (recursiveScanEnabled) {
-        const extractFolderIdFromUrl = (url: string): string | null => { /* ... như cũ ... */
+        const extractFolderIdFromUrl = (url: string): string | null => {
           const folderMatch = url.match(/\/folders\/([a-zA-Z0-9_-]+)/);
           if (folderMatch) return folderMatch[1];
           const driveMatch = url.match(/drive\/(my-drive|shared-with-me|recent|starred|trash)/);
@@ -117,8 +119,8 @@ const Popup: React.FC = () => {
           return null;
         };
         const initialFolderId = extractFolderIdFromUrl(initialTab.url);
-        if (!initialFolderId) { /* ... xử lý lỗi ... */
-          setOutput('Could not determine initial folder. Navigate to a specific folder.');
+        if (!initialFolderId) {
+          setOutput(getMessage(messages, 'noInitialFolderError', 'Could not determine initial folder. Please navigate to a specific folder.'));
           setButtonState('failed'); setTimeout(() => setButtonState('idle'), 3000); setIsScraping(false); return;
         }
         
@@ -129,14 +131,15 @@ const Popup: React.FC = () => {
           const currentFolder = folderQueue.shift();
           if (!currentFolder || visitedFolderIds.has(currentFolder.id)) continue;
           visitedFolderIds.add(currentFolder.id);
-          const folderDisplayNameForStatus = currentFolder.name || getMessage(messages, 'genericFolderName');
-          setStatusMessage(getMessage(messages, 'scanningFolder') + folderDisplayNameForStatus) + '...';
+          
+          const folderDisplayNameForStatus = currentFolder.name || getMessage(messages, 'genericFolderName', 'folder');
+          setStatusMessage(getMessage(messages, 'scanningFolder') +  folderDisplayNameForStatus);
 
-          // ... (Logic điều hướng tab và chờ giữ nguyên như phản hồi trước)
           let targetUrl = `https://drive.google.com/drive/u/0/folders/${currentFolder.id}`;
           if (['root', 'my-drive', 'shared-with-me', 'recent', 'starred', 'trash'].includes(currentFolder.id)) {
             targetUrl = `https://drive.google.com/drive/${currentFolder.id === 'root' ? 'my-drive' : currentFolder.id}`;
           }
+          
           const activeTabInfo = await chrome.tabs.get(initialTab.id);
           if (activeTabInfo.url !== targetUrl) {
             await chrome.tabs.update(initialTab.id, { url: targetUrl });
@@ -153,58 +156,50 @@ const Popup: React.FC = () => {
           } else {
             await new Promise(r => setTimeout(r, 2000));
           }
-          // --- Kết thúc logic điều hướng ---
           
-          // Gọi extractFiles, isRecursiveContext = true để nó trả về subFolders cho queue
           const extractionResult = await extractFiles(initialTab.id, removeExtension, true);
-          const extractedItems = extractionResult.files; // Đây là danh sách TẤT CẢ items (files và folders) ở cấp hiện tại
-          const subFoldersToQueue = extractionResult.subFolders; // Đây là danh sách folder để duyệt tiếp
+          const extractedItems = extractionResult.files; 
+          const subFoldersToQueue = extractionResult.subFolders; 
           
-          accumulatedTotal += extractionResult.total || 0; // Hoặc dùng extractedItems.length nếu total không tin cậy
+          accumulatedTotal += extractionResult.total || extractedItems.length;
           setTotalFiles(accumulatedTotal);
 
-          // Xử lý TẤT CẢ các item (files và folders) lấy được từ cấp hiện tại
-          extractedItems.forEach(item => { // item.name là tên gốc (base name) từ extractFiles
+          extractedItems.forEach(item => { 
             let finalDisplayName = item.name;
-            // Chỉ thêm tiền tố đường dẫn nếu recursiveScan VÀ removeDirectoryPath KHÔNG được chọn
-            if (!removeDirectoryPath) { // recursiveScanEnabled đã được kiểm tra ở nhánh ngoài
+            if (!removeDirectoryPath) { 
               finalDisplayName = `${currentFolder.pathPrefix}${item.name}`;
             }
             allFilesCollected.push({
-              ...item, // Bao gồm id, shareLink gốc và name gốc (item.name)
-              name: finalDisplayName // Ghi đè name bằng finalDisplayName để sử dụng cho output
+              ...item, 
+              name: finalDisplayName 
             });
           });
 
-          // Thêm các thư mục con vào hàng đợi để duyệt tiếp
           if (subFoldersToQueue) {
-            subFoldersToQueue.forEach(subFolderData => { // subFolderData.name là tên gốc
+            subFoldersToQueue.forEach(subFolderData => { 
               if (!visitedFolderIds.has(subFolderData.id)) {
                 folderQueue.push({
                   id: subFolderData.id,
-                  name: subFolderData.name, // Tên gốc để hiển thị "Scanning: folder_name"
-                  pathPrefix: `${currentFolder.pathPrefix}${subFolderData.name}/` // pathPrefix để xây dựng đường dẫn đầy đủ
+                  name: subFolderData.name, 
+                  pathPrefix: `${currentFolder.pathPrefix}${subFolderData.name}/` 
                 });
               }
             });
           }
           
-          // Cập nhật output tạm thời
           const tempOutputText = allFilesCollected.map(f => `${f.name}${activeSeparator}${f.shareLink}`).join('\n');
           setOutput(tempOutputText);
           const tempFileNamesOnlyText = allFilesCollected.map(f => f.name).join('\n');
           setFileNamesOnlyOutput(tempFileNamesOnlyText);
         }
-      } else { // Không phải recursive scan
+      } else { 
         const extractionResult = await extractFiles(initialTab.id, removeExtension, false);
         const extractedItems = extractionResult.files;
-        accumulatedTotal = extractionResult.total || 0; // Hoặc dùng extractedItems.length
+        accumulatedTotal = extractionResult.total || extractedItems.length;
         setTotalFiles(accumulatedTotal);
-        // Với non-recursive, item.name đã là tên gốc. removeDirectoryPath không ảnh hưởng.
         allFilesCollected = extractedItems.map(f => ({...f, name: f.name})); 
       }
       
-      // ... (Phần xử lý output cuối cùng, saveHistory, notification, và finally block giữ nguyên như phản hồi trước)
       if (allFilesCollected.length > 0) {
         const outputText = allFilesCollected.map(file => `${file.name}${activeSeparator}${file.shareLink}`).join('\n');
         setOutput(outputText);
@@ -214,7 +209,7 @@ const Popup: React.FC = () => {
 
         saveHistory({
           timestamp: Date.now(),
-          title: currentTabTitle,
+          title: currentTabTitle || initialTabTitleStr || getMessage(messages, 'driveScanDefaultTitle', 'Drive Scan'),
           links: outputText, 
           separator: activeSeparator,
         }, (updatedHistory) => setHistory(updatedHistory)
@@ -234,8 +229,9 @@ const Popup: React.FC = () => {
       setTimeout(() => setButtonState('idle'), 3000);
 
     } catch (error) {
-      console.error('handleGetLinks: Error:', error);
-      setOutput(`Error: ${error instanceof Error ? error.message : 'Unknown error during link extraction'}`);
+      const errorPrefixStr = getMessage(messages, 'errorPrefix', 'Error: ');
+      const errorMessageBody = error instanceof Error ? error.message : getMessage(messages, 'unknownExtractionError', 'Unknown error during link extraction');
+      setOutput(`${errorPrefixStr}${errorMessageBody}`);
       setButtonState('failed');
       setTimeout(() => setButtonState('idle'), 3000);
     } finally {
@@ -256,6 +252,7 @@ const Popup: React.FC = () => {
       
   const handleExportCSV = async (linksToExport: string, currentSeparatorValue: string, key: string) => {
     setExportState((prev) => ({ ...prev, [key]: 'processing' }));
+    let operationSuccess = false;
     try {
       const activeSepToUse = currentSeparatorValue === 'other' && customSeparator ? customSeparator : currentSeparatorValue;
       const rows = linksToExport.split('\n').map(line => {
@@ -281,15 +278,16 @@ const Popup: React.FC = () => {
       URL.revokeObjectURL(url);
       setExportState((prev) => ({ ...prev, [key]: 'completed' }));
       setStatusMessage(getMessage(messages, 'exportCompleted'));
+      operationSuccess = true;
     } catch (error) {
       setExportState((prev) => ({ ...prev, [key]: 'failed' }));
       setStatusMessage(getMessage(messages, 'exportFailed'));
     } finally {
       setTimeout(() => {
-        setExportState((prev) => ({ ...prev, [key]: 'idle' }));
-        if (exportState[key] === 'completed' || exportState[key] === 'idle') {
+        if (operationSuccess && statusMessage === getMessage(messages, 'exportCompleted')) {
           setStatusMessage('');
         }
+        setExportState((prev) => ({ ...prev, [key]: 'idle' }));
       }, 2000);
     }
   };
@@ -310,7 +308,93 @@ const Popup: React.FC = () => {
     return `${day}/${month}/${year}`;
   };
 
-  if (isLoading) return <div className="popup-container">Loading...</div>;
+  interface TreeNode {
+    name: string;
+    children: { [name: string]: TreeNode };
+  }
+
+  const buildTreeFromPaths = (paths: string[]): TreeNode => {
+    const root: TreeNode = { name: 'root', children: {} };
+    paths.forEach(fullPathString => {
+      if (!fullPathString || fullPathString.trim() === '') return;
+      const parts = fullPathString.split('/').filter(p => p.length > 0);
+      if (parts.length === 0) return;
+      let currentLevel = root;
+      parts.forEach((part) => {
+        if (!currentLevel.children[part]) {
+          currentLevel.children[part] = { name: part, children: {} };
+        }
+        currentLevel = currentLevel.children[part];
+      });
+    });
+    return root;
+  };
+
+  const formatTreeToStringRecursive = (childrenMap: { [name: string]: TreeNode }, currentPrefix: string): string => {
+    let output = '';
+    const childrenArray = Object.values(childrenMap);
+    childrenArray.forEach((child, index) => {
+      const isLast = index === childrenArray.length - 1;
+      output += currentPrefix + (isLast ? '└── ' : '├── ') + child.name + '\n';
+      if (Object.keys(child.children).length > 0) {
+        output += formatTreeToStringRecursive(child.children, currentPrefix + (isLast ? '    ' : '│   '));
+      }
+    });
+    return output;
+  };
+
+  const handleCopyTree = async (historyEntryText: string, entrySeparator: string, uiUpdateKey: string) => {
+    setCopyTreeState(prev => ({ ...prev, [uiUpdateKey]: 'processing' }));
+    let operationSuccess = false;
+    try {
+      const lines = historyEntryText.split('\n');
+      const namesWithPath: string[] = [];
+      let hasPathData = false;
+      lines.forEach(line => {
+        if (line.trim() === '') return;
+        const parts = line.split(entrySeparator);
+        const name = parts[0];
+        if (name) {
+          namesWithPath.push(name);
+          if (name.includes('/')) hasPathData = true;
+        }
+      });
+
+      if (namesWithPath.length === 0) throw new Error(getMessage(messages, 'noDataToCopy'));
+
+      let treeString: string;
+      if (!hasPathData || namesWithPath.length === 1) {
+        treeString = namesWithPath.join('\n');
+      } else {
+        const treeRoot = buildTreeFromPaths(namesWithPath);
+        treeString = formatTreeToStringRecursive(treeRoot.children, '').trim();
+      }
+
+      if (!treeString && namesWithPath.length > 0) {
+        treeString = namesWithPath.join('\n');
+      }
+      if (!treeString) throw new Error(getMessage(messages, 'noDataToCopy'));
+
+      await navigator.clipboard.writeText(treeString);
+      setCopyTreeState(prev => ({ ...prev, [uiUpdateKey]: 'completed' }));
+      setStatusMessage(getMessage(messages, 'copyTreeCompleted'));
+      operationSuccess = true;
+    } catch (error) {
+      console.error('Failed to copy tree:', error);
+      setCopyTreeState(prev => ({ ...prev, [uiUpdateKey]: 'failed' }));
+      const errorMsg = error instanceof Error ? error.message : getMessage(messages, 'copyTreeFailed');
+      setStatusMessage(errorMsg);
+    } finally {
+      setTimeout(() => {
+        if (operationSuccess && statusMessage === getMessage(messages, 'copyTreeCompleted')) {
+          setStatusMessage('');
+        }
+        setCopyTreeState(prev => ({ ...prev, [uiUpdateKey]: 'idle' }));
+      }, 3000);
+    }
+  };
+
+  if (isLoading) return <div className="popup-container">{getMessage(messages, 'processing', 'Loading...')}</div>;
 
   const activeSeparatorDisplay = separator === 'other' ? customSeparator : separator;
 
@@ -335,7 +419,7 @@ const Popup: React.FC = () => {
             userLanguage={userLanguage} setUserLanguage={setUserLanguage}
             copyFileNamesOnly={copyFileNamesOnly} setCopyFileNamesOnly={setCopyFileNamesOnly}
             recursiveScanEnabled={recursiveScanEnabled} setRecursiveScanEnabled={setRecursiveScanEnabled}
-            removeDirectoryPath={removeDirectoryPath} setRemoveDirectoryPath={setRemoveDirectoryPath} // Đã thêm ở trên
+            removeDirectoryPath={removeDirectoryPath} setRemoveDirectoryPath={setRemoveDirectoryPath}
           />
         </Suspense>
       ) : showHistory ? (
@@ -344,14 +428,16 @@ const Popup: React.FC = () => {
           searchQuery={searchQuery}
           copyState={copyState}
           exportState={exportState}
+          copyTreeState={copyTreeState}
           messages={messages}
           setSearchQuery={setSearchQuery}
           performCopy={performCopy}
           performExport={(entryLinks, entrySeparator, key) => handleExportCSV(entryLinks, entrySeparator, key)}
+          handleCopyTree={handleCopyTree}
           handleClearHistory={handleClearHistory}
           formatDate={formatDate}
           copyFileNamesOnlyGlobal={copyFileNamesOnly}
-          removeDirectoryPathGlobal={removeDirectoryPath} // Đã thêm ở trên
+          removeDirectoryPathGlobal={removeDirectoryPath}
           currentSort={historySortOption}
           setSort={setHistorySortOption}
         />

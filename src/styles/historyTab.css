@@ -90,3 +90,40 @@
   overflow-x: hidden;
   overflow-wrap: break-word;
 }
+
+.copy-tree-button {
+  /* Style tương tự các button khác hoặc style riêng */
+  padding: 6px 10px; /* Ví dụ */
+  background-color: #007bff; /* Màu ví dụ - nên dùng biến màu chung */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.copy-tree-button:hover {
+  background-color: #0056b3; /* Màu ví dụ khi hover */
+}
+
+.copy-tree-button.completed {
+  background-color: #28a745; /* Màu thành công */
+}
+.copy-tree-button.completed:hover {
+  background-color: #218838;
+}
+
+.copy-tree-button.failed {
+  background-color: #dc3545; /* Màu thất bại */
+}
+.copy-tree-button.failed:hover {
+  background-color: #c82333;
+}
+
+/* Đảm bảo các button nằm vừa vặn trong .history-actions */
+.history-actions {
+  display: flex;
+  flex-wrap: wrap; /* Cho phép xuống dòng nếu không đủ chỗ */
+  gap: 10px;
+  margin-bottom: 5px;
+}

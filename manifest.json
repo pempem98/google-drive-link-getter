@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Google Drive Link Getter",
-  "version": "1.5.0",
+  "version": "1.7.0",
   "description": "Extracts file names and share links from Google Drive folders",
   "default_locale": "en",
   "permissions": [

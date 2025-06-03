@@ -33,7 +33,6 @@ export const loadMessages = async (locale: string): Promise<Messages> => {
       return fallbackMessages;
     }
 
-
     console.warn('Failed to load messages for default locale "vi".');
     messagesCache[locale] = {};
     return {};

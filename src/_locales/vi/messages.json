@@ -206,5 +206,25 @@
   "genericFolderName": {
     "message": "thư mục",
     "description": "Từ chung cho thư mục khi không có tên cụ thể."
+  },
+  "copyTreeLabel": {
+    "message": "Sao chép cây thư mục",
+    "description": "Nhãn cho nút Sao chép tên dạng cây trong lịch sử."
+  },
+  "copyTreeProcessing": {
+    "message": "Đang sao chép cây...",
+    "description": "Trạng thái khi đang sao chép tên file dạng cây."
+  },
+  "copyTreeCompleted": {
+    "message": "Đã sao chép cây",
+    "description": "Trạng thái khi đã sao chép cây tên file xong."
+  },
+  "copyTreeFailed": {
+    "message": "Sao chép cây thất bại",
+    "description": "Trạng thái khi sao chép cây tên file thất bại."
+  },
+  "noDataToCopy": {
+    "message": "Không có dữ liệu để sao chép.",
+    "description": "Thông báo lỗi khi không có dữ liệu cho thao tác sao chép."
   }
 }
