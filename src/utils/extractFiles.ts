@@ -54,24 +54,22 @@ export const extractFiles = async (
             let lastScrollHeight = 0;
             let noChangeCount = 0;
             const rowSelector = 'tbody > tr > td:nth-child(1) > div > div > div:nth-child(2) > div';
+            const cellSelector = 'div[role="gridcell"] > div > div:nth-child(2)';
+            const isListMode = document.querySelectorAll(rowSelector)?.length ? true : false;
+            const currentSelector = isListMode ? rowSelector : cellSelector;
 
             // checkElements vẫn có thể là async vì nó được await bên trong executeAsyncLogic
             const checkElements = async () => {
-              const itemElements = document.querySelectorAll(rowSelector);
-              const scrollableView = document.querySelector('div.aqZSwc.FoN4ef') ||
-                                  document.querySelector('div.bhBody') ||
-                                  document.querySelector('div.NgkFIf') ||
-                                  document.body;
+              const itemElements = document.querySelectorAll(currentSelector);
+              const scrollableView = document.querySelector('div > div > div > c-wiz') || document.body;
 
               if (document.readyState === 'complete' && itemElements.length > 0) {
                 if (scrollableView) {
                   scrollableView.scrollTo(0, scrollableView.scrollHeight);
-                } else {
-                  window.scrollTo(0, document.body.scrollHeight);
                 }
                 await sleep(800);
 
-                const currentScrollHeight = scrollableView?.scrollHeight || document.body.scrollHeight;
+                const currentScrollHeight = scrollableView?.scrollHeight;
                 if (currentScrollHeight === lastScrollHeight) {
                   noChangeCount++;
                 } else {
@@ -79,7 +77,7 @@ export const extractFiles = async (
                 }
                 lastScrollHeight = currentScrollHeight;
 
-                const updatedItemElements = document.querySelectorAll(rowSelector);
+                const updatedItemElements = document.querySelectorAll(currentSelector);
                 if ((updatedItemElements.length > itemElements.length || noChangeCount < 3) && attempts < maxAttempts) {
                   attempts++;
                   setTimeout(checkElements, 500); // setTimeout không trả về Promise, nên không await ở đây
@@ -87,16 +85,20 @@ export const extractFiles = async (
                 }
 
                 await sleep(500);
-                const finalItemElements = document.querySelectorAll(rowSelector);
+                const finalItemElements = document.querySelectorAll(currentSelector);
                 const allItemsResult: DriveFile[] = [];
                 const subFoldersForQueue: { id: string; name: string }[] = [];
 
                 finalItemElements.forEach(el => {
                   const id = el.querySelector('div')?.getAttribute('data-id');
                   if (!id) return;
-                  let name = el.textContent || '';
+                  let name = el.querySelector('span > strong')?.textContent || '';
                   if (!name.trim()) {
-                    name = el.getAttribute('aria-label') || el.getAttribute('data-tooltip');
+                    name = el.querySelector('div[data-id]:nth-last-child(2)')?.textContent || '';
+                  }
+                  if (!name.trim()) {
+                    name = el.querySelector('div:nth-child(2) > div')?.textContent ||
+                          el.querySelector('div:nth-child(2)')?.textContent || '';
                   }
                   name = name.trim();
                   if (!name.trim()) name = 'Unknown';
@@ -108,9 +110,11 @@ export const extractFiles = async (
                   
                   const ariaLabel = el.getAttribute('aria-label') || '';
                   const isFolder = ariaLabel.toLowerCase().endsWith('folder') || 
-                                  ariaLabel.toLowerCase().endsWith('thư mục');
+                                  ariaLabel.toLowerCase().endsWith('thư mục') ||
+                                  !el.querySelector('svg > title')?.textContent;
                   
-                  const typeGuess = ariaLabel.split(',')[0].trim() || (isFolder ? 'Google Drive Folder' : originalNameBeforeExtRemoval);
+                  const typeGuess = ariaLabel.split(',')[0].trim() ||
+                                  (isFolder ? 'Google Drive Folder' : el.querySelector('svg > title')?.textContent || originalNameBeforeExtRemoval);
                   const shareLink = getFileLink(typeGuess, id);
                   allItemsResult.push({ name, shareLink, id });
                   if (recursiveContextFlag && isFolder) {
