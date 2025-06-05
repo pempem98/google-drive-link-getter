@@ -25,7 +25,9 @@ export interface UserSettings {
   autoShareEnabled: boolean;
   userLanguage: string | null;
   copyFileNamesOnly: boolean;
-  // sortHistoryBy?: HistorySortOption; // Tùy chọn: Nếu bạn muốn lưu cài đặt sắp xếp
+  recursiveScanEnabled: boolean;
+  sortHistoryBy?: HistorySortOption;
+  removeDirectoryPath: boolean;
 }
 
-export type HistorySortOption = 'time_desc' | 'time_asc' | 'name_asc' | 'name_desc'; // <-- Thêm loại sắp xếp
+export type HistorySortOption = 'time_desc' | 'time_asc' | 'name_asc' | 'name_desc';

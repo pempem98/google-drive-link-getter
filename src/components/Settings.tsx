@@ -6,7 +6,7 @@ import CheckboxSetting from './CheckboxSetting';
 import { useMessages } from '../hooks/useMessages';
 import { saveSettings } from '../utils/storageUtils';
 import { getMessage } from '../utils/utils';
-import { UserSettings } from '../types'; // Import UserSettings
+import { UserSettings } from '../types';
 
 interface SettingsProps {
   separator: string;
@@ -21,8 +21,12 @@ interface SettingsProps {
   setAutoShareEnabled: (value: boolean) => void;
   userLanguage: string | null;
   setUserLanguage: (value: string | null) => void;
-  copyFileNamesOnly: boolean; // <-- Thêm prop này
-  setCopyFileNamesOnly: (value: boolean) => void; // <-- Thêm prop này
+  copyFileNamesOnly: boolean;
+  setCopyFileNamesOnly: (value: boolean) => void;
+  recursiveScanEnabled: boolean;
+  setRecursiveScanEnabled: (value: boolean) => void;
+  removeDirectoryPath: boolean;
+  setRemoveDirectoryPath: (value: boolean) => void;
 }
 
 const Settings: React.FC<SettingsProps> = ({
@@ -35,11 +39,15 @@ const Settings: React.FC<SettingsProps> = ({
   notificationsEnabled,
   setNotificationsEnabled,
   autoShareEnabled,
-  setAutoShareEnabled, // Giữ nguyên prop này
+  setAutoShareEnabled,
   userLanguage,
   setUserLanguage,
-  copyFileNamesOnly, // <-- Sử dụng prop này
-  setCopyFileNamesOnly, // <-- Sử dụng prop này
+  copyFileNamesOnly,
+  setCopyFileNamesOnly,
+  recursiveScanEnabled,
+  setRecursiveScanEnabled,
+  removeDirectoryPath,
+  setRemoveDirectoryPath,
 }) => {
   const { messages, isLoading } = useMessages(userLanguage);
   const [customSeparator, setCustomSeparator] = useState<string>('');
@@ -47,9 +55,11 @@ const Settings: React.FC<SettingsProps> = ({
 
   useEffect(() => {
     chrome.storage.local.get(['settings'], (result) => {
-      if (result.settings && result.settings.customSeparator) {
-        setCustomSeparator(result.settings.customSeparator);
-        if (result.settings.separator === 'other') {
+      if (result.settings) {
+        if (result.settings.customSeparator) {
+          setCustomSeparator(result.settings.customSeparator);
+        }
+        if (result.settings.separator === 'other' && result.settings.customSeparator) {
           setShowCustomInput(true);
         }
       }
@@ -57,7 +67,7 @@ const Settings: React.FC<SettingsProps> = ({
   }, []);
 
   const saveCurrentSettings = (updatedSettings: Partial<UserSettings>) => {
-    saveSettings({
+    const currentSettings: UserSettings = {
       separator,
       removeExtension,
       darkMode,
@@ -65,14 +75,17 @@ const Settings: React.FC<SettingsProps> = ({
       autoShareEnabled,
       userLanguage,
       customSeparator,
-      copyFileNamesOnly, // <-- Đảm bảo thuộc tính này được lưu
-      ...updatedSettings, // Ghi đè các cài đặt cụ thể nếu có
-    });
+      copyFileNamesOnly,
+      recursiveScanEnabled,
+      removeDirectoryPath,
+    };
+    saveSettings({ ...currentSettings, ...updatedSettings });
   };
 
   const handleSeparatorChange = (newSeparator: string, newCustomSeparator: string) => {
     setSeparator(newSeparator);
     setCustomSeparator(newCustomSeparator);
+
     saveCurrentSettings({ separator: newSeparator, customSeparator: newCustomSeparator });
   };
 
@@ -94,14 +107,14 @@ const Settings: React.FC<SettingsProps> = ({
     saveCurrentSettings({ notificationsEnabled: newValue });
   };
 
-  const handleCopyFileNamesOnlyChange = (e: React.ChangeEvent<HTMLInputElement>) => { // <-- Thêm hàm xử lý mới
+  const handleCopyFileNamesOnlyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.checked;
     setCopyFileNamesOnly(newValue);
     saveCurrentSettings({ copyFileNamesOnly: newValue });
   };
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleAutoShareChange = (e: React.ChangeEvent<HTMLInputElement>) => { // Đảm bảo hàm này tồn tại nếu bạn bật lại autoShareEnabled
+  const handleAutoShareChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.checked;
     setAutoShareEnabled(newValue);
     saveCurrentSettings({ autoShareEnabled: newValue });
@@ -112,10 +125,19 @@ const Settings: React.FC<SettingsProps> = ({
     saveCurrentSettings({ userLanguage: newLanguage });
   };
 
-  console.log('Settings component rendering, isLoading:', isLoading); // Debug log
+  const handleRecursiveScanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.checked;
+    setRecursiveScanEnabled(newValue);
+    saveCurrentSettings({ recursiveScanEnabled: newValue });
+  };
+
+  const handleRemoveDirectoryPathChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.checked;
+    setRemoveDirectoryPath(newValue);
+    saveCurrentSettings({ removeDirectoryPath: newValue });
+  };
 
   if (isLoading) {
-    console.log('Settings: Showing loading state'); // Debug log
     return <div>Loading...</div>;
   }
 
@@ -145,6 +167,12 @@ const Settings: React.FC<SettingsProps> = ({
         messages={messages}
       />
       <CheckboxSetting
+        label="removeDirectoryLabel"
+        checked={removeDirectoryPath}
+        onChange={handleRemoveDirectoryPathChange}
+        messages={messages}
+      />
+      <CheckboxSetting
         label="darkModeLabel"
         checked={darkMode}
         onChange={handleDarkModeChange}
@@ -156,10 +184,16 @@ const Settings: React.FC<SettingsProps> = ({
         onChange={handleNotificationsChange}
         messages={messages}
       />
-      <CheckboxSetting // <-- Thêm checkbox mới
+      <CheckboxSetting
         label="copyFileNamesOnlyLabel"
         checked={copyFileNamesOnly}
         onChange={handleCopyFileNamesOnlyChange}
+        messages={messages}
+      />
+      <CheckboxSetting
+        label="recursiveScanLabel" 
+        checked={recursiveScanEnabled}
+        onChange={handleRecursiveScanChange}
         messages={messages}
       />
       {/* Temporarily disabled auto-share option */}
@@ -167,7 +201,7 @@ const Settings: React.FC<SettingsProps> = ({
       <CheckboxSetting
         label="autoShareLabel"
         checked={autoShareEnabled}
-        onChange={handleAutoShareChange} // Bỏ comment nếu bật lại
+        onChange={handleAutoShareChange}
         messages={messages}
       />
       */}

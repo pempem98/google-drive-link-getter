@@ -190,5 +190,41 @@
   "sortNameDesc": {
     "message": "Tên (Z-A)",
     "description": "Sort option: Name Z-A"
+  },
+  "recursiveScanLabel": {
+    "message": "Chế độ duyệt cây thư mục",
+    "description": "Nhãn cho cài đặt chế độ duyệt cây thư mục"
+  },
+  "removeDirectoryLabel": {
+    "message": "Loại bỏ đường dẫn (chỉ hiện tên gốc)",
+    "description": "Nhãn cho cài đặt loại bỏ đường dẫn thư mục khỏi kết quả"
+  },
+  "scanningFolder": {
+    "message": "Đang quét: ",
+    "description": "Thông báo trạng thái khi đang quét một thư mục. $folderName$ là chỗ dành cho tên thư mục."
+  },
+  "genericFolderName": {
+    "message": "thư mục",
+    "description": "Từ chung cho thư mục khi không có tên cụ thể."
+  },
+  "copyTreeLabel": {
+    "message": "Sao chép cây thư mục",
+    "description": "Nhãn cho nút Sao chép tên dạng cây trong lịch sử."
+  },
+  "copyTreeProcessing": {
+    "message": "Đang sao chép cây...",
+    "description": "Trạng thái khi đang sao chép tên file dạng cây."
+  },
+  "copyTreeCompleted": {
+    "message": "Đã sao chép cây",
+    "description": "Trạng thái khi đã sao chép cây tên file xong."
+  },
+  "copyTreeFailed": {
+    "message": "Sao chép cây thất bại",
+    "description": "Trạng thái khi sao chép cây tên file thất bại."
+  },
+  "noDataToCopy": {
+    "message": "Không có dữ liệu để sao chép.",
+    "description": "Thông báo lỗi khi không có dữ liệu cho thao tác sao chép."
   }
 }

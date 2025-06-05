@@ -9,17 +9,17 @@ export const useMessages = (userLanguage: string | null) => {
     const load = async () => {
       setIsLoading(true);
       const locale = userLanguage || chrome.i18n.getUILanguage().split('-')[0];
-      console.log('useMessages: Loading messages for locale:', locale); // Debug log
+      console.log('useMessages: Loading messages for locale:', locale);
       try {
         const loadedMessages = await loadMessages(locale);
-        console.log('useMessages: Messages loaded:', loadedMessages); // Debug log
+        console.log('useMessages: Messages loaded:', loadedMessages);
         setMessages(loadedMessages);
       } catch (error) {
-        console.error('useMessages: Error loading messages:', error); // Debug log
+        console.error('useMessages: Error loading messages:', error);
         setMessages({});
       } finally {
         setIsLoading(false);
-        console.log('useMessages: Loading complete, isLoading:', false); // Debug log
+        console.log('useMessages: Loading complete, isLoading:', false);
       }
     };
     load();

@@ -1,5 +1,5 @@
 // src/utils/storageUtils.ts
-import { HistoryEntry, UserSettings } from '../types'; // Import UserSettings
+import { HistoryEntry, UserSettings } from '../types';
 
 export const saveHistory = (
   newEntry: HistoryEntry,
@@ -15,7 +15,7 @@ export const saveHistory = (
   });
 };
 
-export const saveSettings = (settings: UserSettings, callback?: () => void) => { // Sử dụng UserSettings
+export const saveSettings = (settings: UserSettings, callback?: () => void) => {
   chrome.storage.local.set({ settings }, callback);
 };
 

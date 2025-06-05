@@ -190,5 +190,41 @@
   "sortNameDesc": {
     "message": "Name (Z-A)",
     "description": "Sort option: Name Z-A"
+  },
+  "recursiveScanLabel": {
+    "message": "Recursive folder scan mode",
+    "description": "Label for the recursive folder scan setting"
+  },
+  "removeDirectoryLabel": {
+    "message": "Remove directory path (show base name only)",
+    "description": "Label for the setting to remove directory paths from results"
+  },
+  "scanningFolder": {
+    "message": "Scanning: ",
+    "description": "Status message shown while scanning a folder. $folderName$ is a placeholder for the folder name."
+  },
+  "genericFolderName": {
+    "message": "folder",
+    "description": "Generic term for a folder when its name is not available."
+  },
+  "copyTreeLabel": {
+    "message": "Copy Names as Tree",
+    "description": "Label for the Copy Names as Tree button in history."
+  },
+  "copyTreeProcessing": {
+    "message": "Copying tree...",
+    "description": "Status when copying file names as a tree."
+  },
+  "copyTreeCompleted": {
+    "message": "Tree copied",
+    "description": "Status when tree copy of file names is complete."
+  },
+  "copyTreeFailed": {
+    "message": "Tree copy failed",
+    "description": "Status when tree copy of file names fails."
+  },
+  "noDataToCopy": {
+    "message": "No data to copy.",
+    "description": "Error message when there is no data for a copy operation."
   }
 }
