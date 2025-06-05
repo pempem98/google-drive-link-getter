@@ -53,10 +53,11 @@ export const extractFiles = async (
             const maxAttempts = 30;
             let lastScrollHeight = 0;
             let noChangeCount = 0;
+            const rowSelector = 'tbody > tr > td:nth-child(1) > div > div > div:nth-child(2) > div';
 
             // checkElements vẫn có thể là async vì nó được await bên trong executeAsyncLogic
             const checkElements = async () => {
-              const itemElements = document.querySelectorAll('div[data-id]:not([data-tooltip-unhoverable])');
+              const itemElements = document.querySelectorAll(rowSelector);
               const scrollableView = document.querySelector('div.aqZSwc.FoN4ef') ||
                                   document.querySelector('div.bhBody') ||
                                   document.querySelector('div.NgkFIf') ||
@@ -78,7 +79,7 @@ export const extractFiles = async (
                 }
                 lastScrollHeight = currentScrollHeight;
 
-                const updatedItemElements = document.querySelectorAll('div[data-id]:not([data-tooltip-unhoverable])');
+                const updatedItemElements = document.querySelectorAll(rowSelector);
                 if ((updatedItemElements.length > itemElements.length || noChangeCount < 3) && attempts < maxAttempts) {
                   attempts++;
                   setTimeout(checkElements, 500); // setTimeout không trả về Promise, nên không await ở đây
@@ -86,30 +87,18 @@ export const extractFiles = async (
                 }
 
                 await sleep(500);
-                const finalItemElements = document.querySelectorAll('div[data-id]:not([data-tooltip-unhoverable])');
+                const finalItemElements = document.querySelectorAll(rowSelector);
                 const allItemsResult: DriveFile[] = [];
                 const subFoldersForQueue: { id: string; name: string }[] = [];
 
                 finalItemElements.forEach(el => {
-                  const id = el.getAttribute('data-id');
+                  const id = el.querySelector('div')?.getAttribute('data-id');
                   if (!id) return;
-                  let name = '';
-                  const specificNameElement = el.querySelector('.KL4NAf') || el.querySelector('.Q5txwe') || el.querySelector('div[role="option"] span:not([class])');
-                  if (specificNameElement) {
-                    name = specificNameElement.textContent || '';
-                  }
+                  let name = el.textContent || '';
                   if (!name.trim()) {
-                    const nameElViaTooltip = el.querySelector('div[data-tooltip-text]');
-                    if (nameElViaTooltip) name = nameElViaTooltip.getAttribute('data-tooltip-text') || '';
-                  }
-                  if (!name.trim()) {
-                    name = el.getAttribute('aria-label') || el.querySelector('[aria-label]')?.getAttribute('aria-label') || '';
+                    name = el.getAttribute('aria-label') || el.getAttribute('data-tooltip');
                   }
                   name = name.trim();
-                  if (name.toLowerCase().startsWith('folder, ')) name = name.substring('folder, '.length).trim();
-                  else if (name.toLowerCase().startsWith('thư mục, ')) name = name.substring('thư mục, '.length).trim();
-                  else if (name.toLowerCase().startsWith('file, ')) name = name.substring('file, '.length).trim();
-                  else if (name.toLowerCase().startsWith('tệp, ')) name = name.substring('tệp, '.length).trim();
                   if (!name.trim()) name = 'Unknown';
                   
                   const originalNameBeforeExtRemoval = name;
@@ -118,10 +107,8 @@ export const extractFiles = async (
                   }
                   
                   const ariaLabel = el.getAttribute('aria-label') || '';
-                  const isFolder = ariaLabel.toLowerCase().startsWith('folder') || 
-                                   ariaLabel.toLowerCase().includes('thư mục') ||
-                                   el.querySelector('img[src*="folder"]') !== null ||
-                                   el.querySelector('div[role="img"][aria-label*="Folder"], div[role="img"][aria-label*="Thư mục"]') !== null;
+                  const isFolder = ariaLabel.toLowerCase().endsWith('folder') || 
+                                  ariaLabel.toLowerCase().endsWith('thư mục');
                   
                   const typeGuess = ariaLabel.split(',')[0].trim() || (isFolder ? 'Google Drive Folder' : originalNameBeforeExtRemoval);
                   const shareLink = getFileLink(typeGuess, id);
