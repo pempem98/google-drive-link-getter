@@ -105,7 +105,7 @@ export const extractFiles = async (
                   if (removeExt && name !== 'Unknown') {
                     name = name.replace(/\.[^/.]+$/, '');
                   }
-                  
+
                   const ariaLabel = el.getAttribute('aria-label') || '';                  
                   const typeGuess = ariaLabel.split(',')[0].trim() || el.querySelector('svg > title')?.textContent || '';
                   const shareLink = getFileLink(typeGuess, id);
