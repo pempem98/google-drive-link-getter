@@ -102,22 +102,15 @@ export const extractFiles = async (
                   }
                   name = name.trim();
                   if (!name.trim()) name = 'Unknown';
-                  
-                  const originalNameBeforeExtRemoval = name;
                   if (removeExt && name !== 'Unknown') {
                     name = name.replace(/\.[^/.]+$/, '');
                   }
                   
-                  const ariaLabel = el.getAttribute('aria-label') || '';
-                  const isFolder = ariaLabel.toLowerCase().endsWith('folder') || 
-                                  ariaLabel.toLowerCase().endsWith('thư mục') ||
-                                  !el.querySelector('svg > title')?.textContent;
-                  
-                  const typeGuess = ariaLabel.split(',')[0].trim() ||
-                                  (isFolder ? 'Google Drive Folder' : el.querySelector('svg > title')?.textContent || originalNameBeforeExtRemoval);
+                  const ariaLabel = el.getAttribute('aria-label') || '';                  
+                  const typeGuess = ariaLabel.split(',')[0].trim() || el.querySelector('svg > title')?.textContent || '';
                   const shareLink = getFileLink(typeGuess, id);
                   allItemsResult.push({ name, shareLink, id });
-                  if (recursiveContextFlag && isFolder) {
+                  if (recursiveContextFlag && shareLink.includes('drive.google.com/drive/folders/')) {
                     subFoldersForQueue.push({ id, name: name });
                   }
                 });
