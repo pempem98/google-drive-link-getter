@@ -53,10 +53,12 @@ export const extractFiles = async (
             const maxAttempts = 30;
             let lastScrollHeight = 0;
             let noChangeCount = 0;
-            const rowSelector = 'tbody > tr > td:nth-child(1) > div > div > div:nth-child(2) > div';
-            const cellSelector = 'div[role="gridcell"] > div > div:nth-child(2)';
-            const isListMode = document.querySelectorAll(rowSelector)?.length ? true : false;
-            const currentSelector = isListMode ? rowSelector : cellSelector;
+
+            // const rowSelector = 'tbody > tr > td:nth-child(1) > div > div > div:nth-child(2) > div';
+            // const cellSelector = 'div[role="gridcell"] > div > div:nth-child(2)';
+            // const isListMode = document.querySelectorAll(rowSelector)?.length ? true : false;
+            // const currentSelector = isListMode ? rowSelector : cellSelector;
+            const currentSelector = 'c-wiz > div[data-id]';
 
             // checkElements vẫn có thể là async vì nó được await bên trong executeAsyncLogic
             const checkElements = async () => {
@@ -90,7 +92,7 @@ export const extractFiles = async (
                 const subFoldersForQueue: { id: string; name: string }[] = [];
 
                 finalItemElements.forEach(el => {
-                  const id = el.querySelector('div')?.getAttribute('data-id');
+                  const id = el.getAttribute('data-id');
                   if (!id) return;
                   let name = el.querySelector('span > strong')?.textContent || '';
                   if (!name.trim()) {
@@ -106,8 +108,10 @@ export const extractFiles = async (
                     name = name.replace(/\.[^/.]+$/, '');
                   }
 
-                  const ariaLabel = el.getAttribute('aria-label') || '';                  
-                  const typeGuess = ariaLabel.split(',')[0].trim() || el.querySelector('svg > title')?.textContent || '';
+                  const ariaLabel = el.querySelector('div[aria-label][data-tooltip]')?.getAttribute('data-tooltip') ||
+                                    el.querySelector('div[aria-label]:has(svg)')?.getAttribute('aria-label') || 
+                                    '';
+                  const typeGuess = ariaLabel.split(':')[0].trim() || el.querySelector('svg > title')?.textContent || '';
                   const shareLink = getFileLink(typeGuess, id);
                   allItemsResult.push({ name, shareLink, id });
                   if (recursiveContextFlag && shareLink.includes('drive.google.com/drive/folders/')) {
