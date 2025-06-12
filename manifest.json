@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Google Drive Link Getter",
-  "version": "1.7.1",
+  "version": "1.8.1",
   "description": "Extract Drive links, names & folder structures. Customize output, manage history, copy as tree.",
   "default_locale": "en",
   "permissions": [
