@@ -108,10 +108,14 @@ export const extractFiles = async (
                     name = name.replace(/\.[^/.]+$/, '');
                   }
 
-                  const ariaLabel = el.querySelector('div[aria-label][data-tooltip]')?.getAttribute('data-tooltip') ||
-                                    el.querySelector('div[aria-label]:has(svg)')?.getAttribute('aria-label') || 
-                                    '';
-                  const typeGuess = ariaLabel.split(':')[0].trim() || el.querySelector('svg > title')?.textContent || '';
+                  let ariaLabel = el.querySelector('div[aria-label][data-tooltip]')?.getAttribute('data-tooltip');
+                  let typeGuess = '';
+                  if (ariaLabel && ariaLabel.includes(':')) {
+                    typeGuess = ariaLabel.split(':')[0].trim();
+                  } else {
+                    ariaLabel = el.querySelector('div[aria-label]:has(svg)')?.getAttribute('aria-label');
+                    typeGuess = ariaLabel || el.querySelector('svg > title')?.textContent || '';
+                  }
                   const shareLink = getFileLink(typeGuess, id);
                   allItemsResult.push({ name, shareLink, id });
                   if (recursiveContextFlag && shareLink.includes('drive.google.com/drive/folders/')) {
