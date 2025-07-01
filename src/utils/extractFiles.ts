@@ -26,7 +26,7 @@ export const extractFiles = async (
             if (normalizedType.includes('folder') || normalizedType.includes('thư mục')) {
               fileLink = `https://drive.google.com/drive/folders/${id}`;
             } else if (normalizedType.includes('apps script')) {
-              fileLink = `https://script.google.com/home/projects/${id}/edit`;
+              fileLink = `https://script.google.com/d/${id}/edit`;
             } else if (normalizedType.includes('sheet') || normalizedType.includes('trang tính')) {
               fileLink = `https://docs.google.com/spreadsheets/d/${id}/edit`;
             } else if (normalizedType.includes('doc') || normalizedType.includes('tài liệu')) {
@@ -54,13 +54,14 @@ export const extractFiles = async (
             let lastScrollHeight = 0;
             let noChangeCount = 0;
 
-            // const rowSelector = 'tbody > tr > td:nth-child(1) > div > div > div:nth-child(2) > div';
-            // const cellSelector = 'div[role="gridcell"] > div > div:nth-child(2)';
-            // const isListMode = document.querySelectorAll(rowSelector)?.length ? true : false;
-            // const currentSelector = isListMode ? rowSelector : cellSelector;
-            const currentSelector = 'c-wiz > div[data-id]';
+            let currentSelector = 'c-wiz > div[data-id]';
+            if (!document.querySelector(currentSelector)) {
+              const rowSelector = 'tbody > tr > td:nth-child(1) > div > div';
+              const cellSelector = 'div[role="gridcell"]';
+              const isListMode = (document.querySelectorAll(rowSelector)?.length > 1) ? true : false;
+              currentSelector = isListMode ? rowSelector : cellSelector;
+            }
 
-            // checkElements vẫn có thể là async vì nó được await bên trong executeAsyncLogic
             const checkElements = async () => {
               const itemElements = document.querySelectorAll(currentSelector);
               const scrollableView = document.querySelector('div > div > div > c-wiz') || document.body;
@@ -69,7 +70,7 @@ export const extractFiles = async (
                 if (scrollableView) {
                   scrollableView.scrollTo(0, scrollableView.scrollHeight);
                 }
-                await sleep(800);
+                await sleep(200);
 
                 const currentScrollHeight = scrollableView?.scrollHeight;
                 if (currentScrollHeight === lastScrollHeight) {
@@ -82,17 +83,17 @@ export const extractFiles = async (
                 const updatedItemElements = document.querySelectorAll(currentSelector);
                 if ((updatedItemElements.length > itemElements.length || noChangeCount < 3) && attempts < maxAttempts) {
                   attempts++;
-                  setTimeout(checkElements, 500); // setTimeout không trả về Promise, nên không await ở đây
+                  setTimeout(checkElements, 100); // setTimeout không trả về Promise, nên không await ở đây
                   return;
                 }
 
-                await sleep(500);
+                await sleep(100);
                 const finalItemElements = document.querySelectorAll(currentSelector);
                 const allItemsResult: DriveFile[] = [];
                 const subFoldersForQueue: { id: string; name: string }[] = [];
 
                 finalItemElements.forEach(el => {
-                  const id = el.getAttribute('data-id');
+                  const id = el.getAttribute('data-id') || el.querySelector('div[data-id]')?.getAttribute('data-id');
                   if (!id) return;
                   let name = el.querySelector('span > strong')?.textContent || '';
                   if (!name.trim()) {
@@ -108,14 +109,24 @@ export const extractFiles = async (
                     name = name.replace(/\.[^/.]+$/, '');
                   }
 
-                  let ariaLabel = el.querySelector('div[aria-label][data-tooltip]')?.getAttribute('data-tooltip');
+                  let ariaLabel = el.querySelector('div[aria-label][data-tooltip]')?.getAttribute('data-tooltip')
+                                  || el?.getAttribute('arial-label');
                   let typeGuess = '';
                   if (ariaLabel && ariaLabel.includes(':')) {
                     typeGuess = ariaLabel.split(':')[0].trim();
                   } else {
-                    ariaLabel = el.querySelector('div[aria-label]:has(svg)')?.getAttribute('aria-label');
-                    typeGuess = ariaLabel || el.querySelector('svg > title')?.textContent || '';
+                    const oldArialLabel = ariaLabel?.replace(name, '').trim();
+                    ariaLabel = el.querySelector('div[aria-label]:has(svg)')?.getAttribute('aria-label') ?? '';
+                    typeGuess = ariaLabel
+                              || el.querySelector('svg > title')?.textContent
+                              || el.querySelector('img[alt]')?.getAttribute('alt')
+                              || oldArialLabel 
+                              || '';
                   }
+                  if (el.querySelector('svg.Q6yead.QJZfhe.jTxgF')) {
+                    typeGuess = 'Folder';
+                  }
+                  console.log(`typeGuess: ${typeGuess}`);
                   const shareLink = getFileLink(typeGuess, id);
                   allItemsResult.push({ name, shareLink, id });
                   if (recursiveContextFlag && shareLink.includes('drive.google.com/drive/folders/')) {
@@ -128,7 +139,7 @@ export const extractFiles = async (
                 if (attempts >= maxAttempts) {
                   resolveFn({ files: [], subFolders: recursiveContextFlag ? [] : undefined, total: 0 }); // Sử dụng resolveFn
                 } else {
-                  setTimeout(checkElements, 700);
+                  setTimeout(checkElements, 200);
                 }
               }
             }; // Kết thúc checkElements
