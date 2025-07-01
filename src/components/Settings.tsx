@@ -1,5 +1,4 @@
-// src/components/Settings.tsx
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import LanguageSetting from './LanguageSetting';
 import SeparatorSetting from './SeparatorSetting';
 import CheckboxSetting from './CheckboxSetting';
@@ -9,132 +8,25 @@ import { getMessage } from '../utils/utils';
 import { UserSettings } from '../types';
 
 interface SettingsProps {
-  separator: string;
-  setSeparator: (value: string) => void;
-  removeExtension: boolean;
-  setRemoveExtension: (value: boolean) => void;
-  darkMode: boolean;
-  setDarkMode: (value: boolean) => void;
-  notificationsEnabled: boolean;
-  setNotificationsEnabled: (value: boolean) => void;
-  autoShareEnabled: boolean;
-  setAutoShareEnabled: (value: boolean) => void;
-  userLanguage: string | null;
-  setUserLanguage: (value: string | null) => void;
-  copyFileNamesOnly: boolean;
-  setCopyFileNamesOnly: (value: boolean) => void;
-  recursiveScanEnabled: boolean;
-  setRecursiveScanEnabled: (value: boolean) => void;
-  removeDirectoryPath: boolean;
-  setRemoveDirectoryPath: (value: boolean) => void;
+    settings: UserSettings;
+    setSettings: React.Dispatch<React.SetStateAction<UserSettings>>;
 }
 
-const Settings: React.FC<SettingsProps> = ({
-  separator,
-  setSeparator,
-  removeExtension,
-  setRemoveExtension,
-  darkMode,
-  setDarkMode,
-  notificationsEnabled,
-  setNotificationsEnabled,
-  autoShareEnabled,
-  setAutoShareEnabled,
-  userLanguage,
-  setUserLanguage,
-  copyFileNamesOnly,
-  setCopyFileNamesOnly,
-  recursiveScanEnabled,
-  setRecursiveScanEnabled,
-  removeDirectoryPath,
-  setRemoveDirectoryPath,
-}) => {
-  const { messages, isLoading } = useMessages(userLanguage);
-  const [customSeparator, setCustomSeparator] = useState<string>('');
-  const [showCustomInput, setShowCustomInput] = useState<boolean>(false);
+const Settings: React.FC<SettingsProps> = ({ settings, setSettings }) => {
+  const { messages, isLoading } = useMessages(settings.userLanguage);
 
-  useEffect(() => {
-    chrome.storage.local.get(['settings'], (result) => {
-      if (result.settings) {
-        if (result.settings.customSeparator) {
-          setCustomSeparator(result.settings.customSeparator);
-        }
-        if (result.settings.separator === 'other' && result.settings.customSeparator) {
-          setShowCustomInput(true);
-        }
-      }
-    });
-  }, []);
-
-  const saveCurrentSettings = (updatedSettings: Partial<UserSettings>) => {
-    const currentSettings: UserSettings = {
-      separator,
-      removeExtension,
-      darkMode,
-      notificationsEnabled,
-      autoShareEnabled,
-      userLanguage,
-      customSeparator,
-      copyFileNamesOnly,
-      recursiveScanEnabled,
-      removeDirectoryPath,
-    };
-    saveSettings({ ...currentSettings, ...updatedSettings });
+  const handleSettingChange = (updates: Partial<UserSettings>) => {
+    const newSettings = { ...settings, ...updates };
+    setSettings(newSettings);
+    saveSettings(newSettings);
   };
 
   const handleSeparatorChange = (newSeparator: string, newCustomSeparator: string) => {
-    setSeparator(newSeparator);
-    setCustomSeparator(newCustomSeparator);
-
-    saveCurrentSettings({ separator: newSeparator, customSeparator: newCustomSeparator });
-  };
-
-  const handleExtensionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.checked;
-    setRemoveExtension(newValue);
-    saveCurrentSettings({ removeExtension: newValue });
-  };
-
-  const handleDarkModeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.checked;
-    setDarkMode(newValue);
-    saveCurrentSettings({ darkMode: newValue });
-  };
-
-  const handleNotificationsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.checked;
-    setNotificationsEnabled(newValue);
-    saveCurrentSettings({ notificationsEnabled: newValue });
-  };
-
-  const handleCopyFileNamesOnlyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.checked;
-    setCopyFileNamesOnly(newValue);
-    saveCurrentSettings({ copyFileNamesOnly: newValue });
-  };
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleAutoShareChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.checked;
-    setAutoShareEnabled(newValue);
-    saveCurrentSettings({ autoShareEnabled: newValue });
+    handleSettingChange({ separator: newSeparator, customSeparator: newCustomSeparator });
   };
 
   const handleLanguageChange = (newLanguage: string | null) => {
-    setUserLanguage(newLanguage);
-    saveCurrentSettings({ userLanguage: newLanguage });
-  };
-
-  const handleRecursiveScanChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.checked;
-    setRecursiveScanEnabled(newValue);
-    saveCurrentSettings({ recursiveScanEnabled: newValue });
-  };
-
-  const handleRemoveDirectoryPathChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.checked;
-    setRemoveDirectoryPath(newValue);
-    saveCurrentSettings({ removeDirectoryPath: newValue });
+    handleSettingChange({ userLanguage: newLanguage });
   };
 
   if (isLoading) {
@@ -145,66 +37,57 @@ const Settings: React.FC<SettingsProps> = ({
     <div className="settings-container">
       <h2>{getMessage(messages, 'settingsTab')}</h2>
       <LanguageSetting
-        userLanguage={userLanguage}
-        setUserLanguage={setUserLanguage}
+        userLanguage={settings.userLanguage}
+        setUserLanguage={() => {}}
         messages={messages}
         onChange={handleLanguageChange}
       />
       <SeparatorSetting
-        separator={separator}
-        customSeparator={customSeparator}
-        setSeparator={setSeparator}
-        setCustomSeparator={setCustomSeparator}
-        showCustomInput={showCustomInput}
-        setShowCustomInput={setShowCustomInput}
+        separator={settings.separator}
+        customSeparator={settings.customSeparator}
+        setSeparator={() => {}}
+        setCustomSeparator={() => {}}
+        showCustomInput={settings.separator === 'other'}
+        setShowCustomInput={() => {}}
         messages={messages}
         onChange={handleSeparatorChange}
       />
       <CheckboxSetting
         label="extensionLabel"
-        checked={removeExtension}
-        onChange={handleExtensionChange}
+        checked={settings.removeExtension}
+        onChange={(e) => handleSettingChange({ removeExtension: e.target.checked })}
         messages={messages}
       />
       <CheckboxSetting
         label="removeDirectoryLabel"
-        checked={removeDirectoryPath}
-        onChange={handleRemoveDirectoryPathChange}
+        checked={settings.removeDirectoryPath}
+        onChange={(e) => handleSettingChange({ removeDirectoryPath: e.target.checked })}
         messages={messages}
       />
       <CheckboxSetting
         label="darkModeLabel"
-        checked={darkMode}
-        onChange={handleDarkModeChange}
+        checked={settings.darkMode}
+        onChange={(e) => handleSettingChange({ darkMode: e.target.checked })}
         messages={messages}
       />
       <CheckboxSetting
         label="notificationsLabel"
-        checked={notificationsEnabled}
-        onChange={handleNotificationsChange}
+        checked={settings.notificationsEnabled}
+        onChange={(e) => handleSettingChange({ notificationsEnabled: e.target.checked })}
         messages={messages}
       />
       <CheckboxSetting
         label="copyFileNamesOnlyLabel"
-        checked={copyFileNamesOnly}
-        onChange={handleCopyFileNamesOnlyChange}
+        checked={settings.copyFileNamesOnly}
+        onChange={(e) => handleSettingChange({ copyFileNamesOnly: e.target.checked })}
         messages={messages}
       />
       <CheckboxSetting
-        label="recursiveScanLabel" 
-        checked={recursiveScanEnabled}
-        onChange={handleRecursiveScanChange}
+        label="recursiveScanLabel"
+        checked={settings.recursiveScanEnabled}
+        onChange={(e) => handleSettingChange({ recursiveScanEnabled: e.target.checked })}
         messages={messages}
       />
-      {/* Temporarily disabled auto-share option */}
-      {/*
-      <CheckboxSetting
-        label="autoShareLabel"
-        checked={autoShareEnabled}
-        onChange={handleAutoShareChange}
-        messages={messages}
-      />
-      */}
     </div>
   );
 };
